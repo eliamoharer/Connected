@@ -1,0 +1,71 @@
+//
+//  ContentView.swift
+//  Connected
+//
+//  Created by Elia Moharer on 2026-05-10.
+//
+
+import SwiftUI
+
+struct ContentView: View {
+    @StateObject private var vm = ChatViewModel()
+    @StateObject private var fvm = FolderViewModel()
+
+    var body: some View {
+        GeometryReader { proxy in
+            let drawerWidth = proxy.size.width
+            
+            ZStack(alignment: .leading) {
+                Color("BackgroundColor")
+                    .ignoresSafeArea()
+                
+                VStack {
+                    ScrollView {
+                        LazyVStack() {
+                            ForEach(vm.messages) {
+                                currentMessage in ChatBubble(message: currentMessage)
+                            }
+                        }
+                        .animation(.bouncy, value: vm.messages.count)
+                    }
+                    .ignoresSafeArea(edges: .top)
+                    .contentMargins(.top, 120, for: .scrollContent)
+                    .scrollDismissesKeyboard(.interactively)
+                    
+                    .overlay {
+                        if vm.messages.isEmpty {
+                            VStack {
+                                Spacer()
+                                Text("Connected.")
+                                    .foregroundStyle(Color("AIText"))
+                                    .font(.largeTitle)
+                                    .bold()
+                                    .italic()
+                                Spacer()
+                            }
+                            .font(.system(size: 17, design: .serif))
+                            .transition(.blurReplace)
+                        }
+                    }
+                    
+                    // Glassmorphic Input Box
+                    .safeAreaInset(edge: .bottom) {
+                        ChatView(vm: vm)
+                    }
+                    .ignoresSafeArea(.container, edges: .bottom)
+                }
+                .allowsHitTesting(!fvm.isFolderOpen)
+                
+                FolderView(vm: vm, fvm: fvm)
+                    .offset(x: fvm.drawerPosition ?? -drawerWidth)
+                    .ignoresSafeArea()
+            }
+            .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
+            .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+        }
+    }
+}
+
+#Preview {
+    ContentView()
+}

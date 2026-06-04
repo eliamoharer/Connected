@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="katex.min.css">
+    <script src="katex.min.js"></script>
+    <script src="marked.min.js"></script>
+    <script src="auto-render.min.js"></script>
+    <script src="purify.min.js"></script>
+            
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        #markcontain {
+            width: 100%;
+            word-wrap: break-word;
+            font-family: -apple-system, sans-serif;
+            font-size: 17px;
+            line-height: 1.4;
+            
+        }
+    </style>
+</head>
+<body>
+    <div id="markcontain"></div>
+        
+    <script>
+        const container = document.getElementById('markcontain');
+        
+        function updateContent(rawMarkdown) {
+            if (!rawMarkdown || typeof rawMarkdown !== 'string') {
+                return;
+            }
+            
+            try {
+                const cleaned = rawMarkdown.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "");
+                
+                const rawHTML = marked.parse(cleaned, { gfm: true, breaks: true })
+                
+                let safeHTML = rawHTML;
+                if (typeof DOMPurify === 'object') {
+                    safeHTML = DOMPurify.sanitize(rawHTML)
+                }
+                
+                container.innerHTML = safeHTML;
+                
+                if (typeof renderMathInElement === 'function') {
+                    renderMathInElement(container, {
+                        delimiters: [
+                                     {left: '$$', right: '$$', display: true},
+                                     {left: '$', right: '$', display: false},
+                                     {left: '\\(', right: '\\)', display: false},
+                                     {left: '\\[', right: '\\]', display: true}
+                                     ],
+                                     throwOnError: false
+                    });
+                }
+            } catch (error) {
+                console.error('Render failure:', error);
+                container.innerHTML = '<p style="color:red;">Render Failure</p>'
+            }
+        }
+        
+        window.updateContent = updateContent;
+    </script>
+</body>
+</html>
