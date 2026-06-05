@@ -31,66 +31,62 @@ struct FolderView: View {
     
     var body: some View {
         VStack(alignment: .leading) {
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))]) {
+                VStack {
+                    Button {
+                        vm.curLLMProfile = nil
+                        for idx in fvm.buttonEnabled.indices {
+                            fvm.buttonEnabled[idx] = false
+                        }
+                        fvm.buttonEnabled[0] = true
+                    } label: {
+                        (fvm.buttonEnabled[0] ? Color.white : Color.black.opacity(0.2))
+                            .frame(width: 75, height: 50)
+                            .clipShape(.rect(cornerRadius: 12))
+                            .overlay(.black, in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
+                    }
+                    
+                    Text("Native")
+                        .font(.caption)
+                }
+                
+                ForEach(fvm.profiles.indices, id: \.self) { index in
+                    let profile = fvm.profiles[index]
+                    
                     VStack {
                         Button {
-                            vm.curLLMProfile = nil
+                            vm.curLLMProfile = profile
                             for idx in fvm.buttonEnabled.indices {
                                 fvm.buttonEnabled[idx] = false
                             }
-                            fvm.buttonEnabled[0] = true
+                            fvm.buttonEnabled[index + 1] = true
                         } label: {
-                            (fvm.buttonEnabled[0] ? Color.white : Color.black.opacity(0.2))
+                            (fvm.buttonEnabled[index + 1] ? Color.white : Color.black.opacity(0.2))
                                 .frame(width: 75, height: 50)
                                 .clipShape(.rect(cornerRadius: 12))
                                 .overlay(.black, in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
                         }
                         
-                        Text("Native")
-                            .font(.caption)
-                    }
-                    
-                    ForEach(fvm.profiles.indices, id: \.self) { index in
-                        let profile = fvm.profiles[index]
-                        
-                        VStack {
-                            Button {
-                                vm.curLLMProfile = profile
-                                for idx in fvm.buttonEnabled.indices {
-                                    fvm.buttonEnabled[idx] = false
-                                }
-                                fvm.buttonEnabled[index + 1] = true
-                            } label: {
-                                (fvm.buttonEnabled[index + 1] ? Color.white : Color.black.opacity(0.2))
-                                    .frame(width: 75, height: 50)
-                                    .clipShape(.rect(cornerRadius: 12))
-                                    .overlay(.black, in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
-                            }
-                            
-                            Text(profile.type ?? "Profile \(fvm.buttonCount)")
-                                .font(.caption)
-                        }
-                    }
-                    
-                    VStack {
-                        Button {
-                            showAdd = true
-                        } label: {
-                            Image(systemName: "plus")
-                                .frame(width: 75, height: 50)
-                                .clipShape(.rect(cornerRadius: 12))
-                                .overlay(.black.opacity(0.2), in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
-                                .foregroundStyle(.black.opacity(0.2))
-                        }
-                        
-                        Text(" ")
+                        Text(profile.type ?? "Profile \(fvm.profiles.count)")
                             .font(.caption)
                     }
                 }
                 
+                VStack {
+                    Button {
+                        showAdd = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .frame(width: 75, height: 50)
+                            .clipShape(.rect(cornerRadius: 12))
+                            .overlay(.black.opacity(0.2), in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
+                            .foregroundStyle(.black.opacity(0.2))
+                    }
+                    
+                    Text(" ")
+                        .font(.caption)
+                }
             }
-            .scrollClipDisabled(true)
             
             Toggle(isOn: $vm.sysPromptIsEnabled) {
                 Text("Personal Instructions")
@@ -195,7 +191,7 @@ struct FolderView: View {
         .glassEffect(.regular, in: .rect)
         .ignoresSafeArea()
         .sheet(isPresented: $showAdd) {
-            FolderButtonView(fvm: fvm)
+            FolderButtonView(fvm: fvm, vm: vm)
                 .presentationDetents([.medium])
         }
     }

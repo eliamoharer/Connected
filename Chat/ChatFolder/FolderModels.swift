@@ -17,6 +17,7 @@ struct Parameter {
 
 struct FolderButtonView: View {
     @ObservedObject var fvm: FolderViewModel
+    @ObservedObject var vm: ChatViewModel
     
     @State private var newThinking: Bool = true
     @State private var isEditing: Bool = false
@@ -42,7 +43,7 @@ struct FolderButtonView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 VStack {
                     Toggle("Enable Thinking", isOn: $newThinking)
-                    
+                    Divider()
                     ParamSlider(min: 0,
                                 max: 2,
                                 step: 0.05,
@@ -124,7 +125,7 @@ struct FolderButtonView: View {
                                                          repetition_penalty: repPen.isEnabled ? repPen.value : nil,
                                                          thinking: newThinking)
                         fvm.profiles.append(creation)
-                        fvm.buttonCount += 1
+                        vm.curLLMProfile = creation
                         for idx in fvm.buttonEnabled.indices {
                             fvm.buttonEnabled[idx] = false
                         }
@@ -180,5 +181,5 @@ struct ParamSlider: View {
 }
 
 #Preview {
-    FolderButtonView(fvm: FolderViewModel())
+    FolderButtonView(fvm: FolderViewModel(), vm: ChatViewModel())
 }

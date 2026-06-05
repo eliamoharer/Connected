@@ -16,8 +16,8 @@ struct ChatView: View {
     var body: some View {
         VStack(spacing: 12) {
             if !vm.selectedImages.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack {
+                ScrollView(.vertical, showsIndicators: false) {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
                         ForEach(vm.selectedImages.indices, id: \.self) { image in
                             ZStack(alignment: .topTrailing) {
                                 Image(uiImage: vm.selectedImages[image].resizeMax(maxDim: 100)!)
@@ -30,12 +30,20 @@ struct ChatView: View {
                                     Image(systemName: "xmark.circle.fill")
                                         .foregroundStyle(.white, .red)
                                         .padding(4)
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(.rect)
                                 }
+                                .padding(-8)
                             }
+                            .scrollTransition { content, phase in content.opacity(phase.isIdentity ? 1.0 : 0.7) }
                         }
                     }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 12)
                 }
+                .frame(maxHeight: 125)
                 Divider()
+                    .padding(.vertical, -12)
             }
             HStack(spacing: 12) {
                 TextField("Type...",  text: $vm.prompt, axis: .vertical)
@@ -57,12 +65,8 @@ struct ChatView: View {
                         }
                         .background(!vm.prompt.isEmpty || !vm.selectedImages.isEmpty ? .blue : .blue.opacity(0.5), in: .rect(cornerRadius:32))
                         .frame(width: 44, height: 44, alignment: .center)
-                        
-                        // 3. Define the shape of the 44x44 tap target
                         .contentShape(.rect)
                     }
-                    // 4. Zero out layout impact if it's still pushing things (Instead of massive negative numbers)
-                    //.padding(.horizontal, -4)
                     .padding(-12)
                 } else {
                     Button(action: {
@@ -81,16 +85,19 @@ struct ChatView: View {
                     }
                 }
             }
+            .padding(.horizontal, 24)
+            .padding(.top, vm.selectedImages.isEmpty ? 12 : -12)
             
             HStack {
-                Button(action: {
-                    print("test")
-                }) {
-                    Image(systemName: "plus")
-                        .frame(width: 44, height: 44)
-                        .contentShape(.rect)
-                }
-                .padding(-12)
+                // Add in next update
+//                Button(action: {
+//                    print("test")
+//                }) {
+//                    Image(systemName: "plus")
+//                        .frame(width: 44, height: 44)
+//                        .contentShape(.rect)
+//                }
+//                .padding(-12)
                 
                 PhotosPicker(selection: $pics, matching: .images, photoLibrary: .shared()) {
                     Image(systemName: "photo.badge.plus")
@@ -124,11 +131,12 @@ struct ChatView: View {
                 ChatMenuView(vm: vm, scanner: vm.scanner)
                 
             }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 12)
         }
-        .padding(.horizontal, 24) // Uniform padding inside the capsule
-        .padding(.vertical, 12)
         .glassEffect(.regular.tint(.clear).interactive(), in: .rect(cornerRadius: 32))
-        .padding(24) // Padding outside the capsule
+        .clipShape(.rect(cornerRadius: 32))
+        .padding(24)
         
     }
 }

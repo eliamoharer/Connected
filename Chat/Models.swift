@@ -63,8 +63,8 @@ extension UIImage {
 
 
 
-struct LLMProfile: Identifiable {
-    let id = UUID()
+struct LLMProfile: Identifiable, Codable {
+    var id = UUID()
     
     var type: String?
     var temperature: Double?

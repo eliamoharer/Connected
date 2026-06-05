@@ -10,17 +10,32 @@ internal import Combine
 @MainActor
 class FolderViewModel: ObservableObject {
     
-    @Published var buttonEnabled: [Bool] = [true]
-    @Published var profiles: [LLMProfile] = []
-    @Published var buttonCount: Int = 0
+    @Published var buttonEnabled: [Bool] = [true] {
+        didSet {
+            UserDefaults.standard.set(buttonEnabled, forKey: buttonKey)
+        }
+    }
+    @Published var profiles: [LLMProfile] = [] {
+        didSet {
+            saveProfileToUserDefaults()
+        }
+    }
     
     @Published var isFolderOpen = false
     @Published var drawerPosition: CGFloat?
     var isDragging = false
     let threshold = CGFloat(10) * .pi / 180
     
+    private let buttonKey = "buttonKey"
+    private let profilesKey = "profilesKey"
+    
+    init() {
+        loadProfileFromUserDefaults()
+        buttonEnabled = UserDefaults.standard.array(forKey: buttonKey) as? [Bool] ?? [true]
+    }
+    
     func createProfile(type: String, temperature: Double?, max_tokens: Int?, top_p: Double?, top_k: Int?, min_p: Double?, presence_penalty: Double?, repetition_penalty: Double?, thinking: Bool) -> LLMProfile {
-        return LLMProfile(type: type.isEmpty ? "Profile \(buttonCount + 1)" : type, temperature: temperature, max_tokens: max_tokens, top_p: top_p, top_k: top_k, min_p: min_p, presence_penalty: presence_penalty, repetition_penalty: repetition_penalty, thinking: thinking)
+        return LLMProfile(type: type.isEmpty ? "Profile \(profiles.count + 1)" : type, temperature: temperature, max_tokens: max_tokens, top_p: top_p, top_k: top_k, min_p: min_p, presence_penalty: presence_penalty, repetition_penalty: repetition_penalty, thinking: thinking)
     }
     
     func FolderGesture(drawerWidth: CGFloat) -> some Gesture {
@@ -52,5 +67,28 @@ class FolderViewModel: ObservableObject {
                 }
                 isDragging = false
             }
+    }
+    
+    private func saveProfileToUserDefaults() {
+        do {
+            let encoder = JSONEncoder()
+            let encoded = try encoder.encode(profiles)
+            UserDefaults.standard.set(encoded, forKey: profilesKey)
+        } catch {
+            print("Failed to save LLM Profile: \(error)")
+        }
+    }
+    
+    private func loadProfileFromUserDefaults() {
+        if let data = UserDefaults.standard.data(forKey: profilesKey) {
+            do {
+                let decoder = JSONDecoder()
+                self.profiles = try decoder.decode([LLMProfile].self, from: data)
+            } catch {
+                print("Failed to load LLM History: \(error)")
+            }
+        } else {
+            self.profiles = []
+        }
     }
 }

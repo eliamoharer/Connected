@@ -39,7 +39,11 @@ class ChatViewModel: ObservableObject {
     @Published var selectedImages: [UIImage] = []
     @Published var isThinking: Bool = true
     @Published var models: [String] = []
-    @Published var curLLMProfile: LLMProfile?
+    @Published var curLLMProfile: LLMProfile? {
+        didSet {
+            saveProfileToUserDefaults()
+        }
+    }
     
     @Published var endpoint: String = "" {
         didSet {
@@ -64,6 +68,7 @@ class ChatViewModel: ObservableObject {
     
     init() {
         loadHistoryFromUserDefaults()
+        loadProfileFromUserDefaults()
         
         systemPrompt = UserDefaults.standard.string(forKey: systemPromptKey) ?? ""
         sysPromptIsEnabled = UserDefaults.standard.bool(forKey: systemPromptIsEnabledKey)
@@ -115,6 +120,29 @@ class ChatViewModel: ObservableObject {
             }
         } else {
             self.savedChats = []
+        }
+    }
+    
+    private func saveProfileToUserDefaults() {
+        do {
+            let encoder = JSONEncoder()
+            let encoded = try encoder.encode(curLLMProfile)
+            UserDefaults.standard.set(encoded, forKey: profileKey)
+        } catch {
+            print("Failed to save LLM Profile: \(error)")
+        }
+    }
+    
+    private func loadProfileFromUserDefaults() {
+        if let data = UserDefaults.standard.data(forKey: profileKey) {
+            do {
+                let decoder = JSONDecoder()
+                self.curLLMProfile = try decoder.decode(LLMProfile.self, from: data)
+            } catch {
+                print("Failed to load LLM History: \(error)")
+            }
+        } else {
+            self.curLLMProfile = nil
         }
     }
     

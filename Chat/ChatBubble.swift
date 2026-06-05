@@ -34,6 +34,7 @@ struct ChatBubble: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
                             }
                         }
+                        .environment(\.layoutDirection, .rightToLeft)
                         .frame(maxWidth: 300)
                         .padding(.horizontal, 16)
                     }
