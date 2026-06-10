@@ -106,7 +106,6 @@ class ChatViewModel: ObservableObject {
             let encoded = try encoder.encode(savedChats)
             UserDefaults.standard.set(encoded, forKey: historyKey)
         } catch {
-            print("Failed to save chat history: \(error)")
         }
     }
     
@@ -116,7 +115,6 @@ class ChatViewModel: ObservableObject {
                 let decoder = JSONDecoder()
                 self.savedChats = try decoder.decode([SavedChat].self, from: data)
             } catch {
-                print("Failed to load chat history: \(error)")
             }
         } else {
             self.savedChats = []
@@ -129,7 +127,6 @@ class ChatViewModel: ObservableObject {
             let encoded = try encoder.encode(curLLMProfile)
             UserDefaults.standard.set(encoded, forKey: profileKey)
         } catch {
-            print("Failed to save LLM Profile: \(error)")
         }
     }
     
@@ -139,7 +136,6 @@ class ChatViewModel: ObservableObject {
                 let decoder = JSONDecoder()
                 self.curLLMProfile = try decoder.decode(LLMProfile.self, from: data)
             } catch {
-                print("Failed to load LLM History: \(error)")
             }
         } else {
             self.curLLMProfile = nil

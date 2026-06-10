@@ -32,6 +32,20 @@ struct ContentView: View {
                     .contentMargins(.top, 120, for: .scrollContent)
                     .scrollDismissesKeyboard(.interactively)
                     
+                    .overlay(alignment: .top) {
+                        LinearGradient(
+                            colors: [
+                                Color("BackgroundColor"),
+                                Color("BackgroundColor").opacity(0)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 56)
+                        .ignoresSafeArea(edges: .top)
+                        .allowsHitTesting(false)
+                    }
+                    
                     .overlay {
                         if vm.messages.isEmpty {
                             VStack {
@@ -62,7 +76,9 @@ struct ContentView: View {
             }
             .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
             .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+            
         }
+        
     }
 }
 

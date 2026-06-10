@@ -50,12 +50,9 @@ class FolderViewModel: ObservableObject {
                 } else {
                     drawerPosition = max(-drawerWidth, min(value.translation.width - drawerWidth, 0))
                 }
-                
-                
             }
             .onEnded { [self] value in
                 guard isDragging else { return }
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 withAnimation(.interactiveSpring(response: 0.28, dampingFraction: 0.86)) {
                     if value.translation.width > 8 {
                         isFolderOpen = true
@@ -65,6 +62,7 @@ class FolderViewModel: ObservableObject {
                         drawerPosition = -drawerWidth
                     }
                 }
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 isDragging = false
             }
     }
@@ -75,7 +73,6 @@ class FolderViewModel: ObservableObject {
             let encoded = try encoder.encode(profiles)
             UserDefaults.standard.set(encoded, forKey: profilesKey)
         } catch {
-            print("Failed to save LLM Profile: \(error)")
         }
     }
     
@@ -85,10 +82,10 @@ class FolderViewModel: ObservableObject {
                 let decoder = JSONDecoder()
                 self.profiles = try decoder.decode([LLMProfile].self, from: data)
             } catch {
-                print("Failed to load LLM History: \(error)")
             }
         } else {
             self.profiles = []
         }
     }
 }
+

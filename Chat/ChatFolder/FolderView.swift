@@ -79,8 +79,8 @@ struct FolderView: View {
                         Image(systemName: "plus")
                             .frame(width: 75, height: 50)
                             .clipShape(.rect(cornerRadius: 12))
-                            .overlay(.black.opacity(0.2), in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
-                            .foregroundStyle(.black.opacity(0.2))
+                            .overlay(.primary.opacity(0.5), in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
+                            .foregroundStyle(.primary.opacity(0.5))
                     }
                     
                     Text(" ")
@@ -94,8 +94,8 @@ struct FolderView: View {
             }
             TextEditor(text: $vm.systemPrompt)
                 .background(.clear, in: .rect(cornerRadius: 12))
-                .overlay(.black, in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
-            
+                .overlay(.primary, in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
+                .clipShape(.rect(cornerRadius: 12))
             Divider()
             ScrollView(.vertical, showsIndicators: false) {
                 ForEach(filteredChats.reversed()) { chat in
@@ -154,7 +154,6 @@ struct FolderView: View {
                     }
                 }
             )
-            
             HStack {
                 Button {
                     //guard !vm.messages.isEmpty else { return }
@@ -183,7 +182,6 @@ struct FolderView: View {
                 .glassEffect(in: .circle)
             }
             .padding()
-            
             
         }
         .padding(.horizontal, 16)
