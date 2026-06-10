@@ -23,7 +23,7 @@ struct ContentView: View {
                     ScrollView {
                         LazyVStack() {
                             ForEach(vm.messages) {
-                                currentMessage in ChatBubble(message: currentMessage)
+                                currentMessage in ChatBubble(message: currentMessage, vm: vm)
                             }
                         }
                         .animation(.bouncy, value: vm.messages.count)
@@ -69,10 +69,12 @@ struct ContentView: View {
                     .ignoresSafeArea(.container, edges: .bottom)
                 }
                 .allowsHitTesting(!fvm.isFolderOpen)
+                .ignoresSafeArea(.keyboard, edges: fvm.isFolderOpen ? .bottom : [])
                 
                 FolderView(vm: vm, fvm: fvm)
                     .offset(x: fvm.drawerPosition ?? -drawerWidth)
-                    .ignoresSafeArea()
+                    .allowsHitTesting(fvm.isFolderOpen)
+                    //.ignoresSafeArea()
             }
             .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
             .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))

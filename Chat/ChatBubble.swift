@@ -8,10 +8,15 @@ import SwiftUI
 
 struct ChatBubble: View {
     @ObservedObject var stream: ChatStream
+    @ObservedObject var vm: ChatViewModel
+    
+    @State private var showReport = false
+    
     let message: Message
     
-    init(message: Message) {
+    init(message: Message, vm: ChatViewModel) {
         self.message = message
+        self.vm = vm
         self.stream = message.stream ?? ChatStream()
         
         if self.stream.visibleMarkdown.isEmpty && !message.text.isEmpty {
@@ -64,6 +69,7 @@ struct ChatBubble: View {
                             .glassEffect()
                             .padding(.horizontal, 14)
                             .foregroundStyle(Color.gray)
+                            .padding(.bottom, 0)
                             
                             // Show thinking text only when this message's toggle is on
                             if stream.showThinking == true {
@@ -75,6 +81,39 @@ struct ChatBubble: View {
                         StreamObserverView(stream: stream)
                             .padding(.horizontal, 24)
                             .font(.system(size: 18))
+                        
+                        if stream.curState == .idle {
+                            HStack(spacing: 16) {
+                                Button(action: {
+                                    UIPasteboard.general.string = stream.visibleMarkdown
+                                }) {
+                                    Image(systemName: "document.on.document")
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(.rect)
+                                }
+                                .padding(-12)
+                                
+                                Button(action: {
+                                    showReport = true
+                                }) {
+                                    Image(systemName: "flag")
+                                        .frame(width: 44, height: 44)
+                                        .contentShape(.rect)
+                                }
+                                .padding(-12)
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.top, -10)
+                            .alert("Are you sure you want to report this message?", isPresented: $showReport) {
+                                Button("Cancel", role: .cancel) { }
+                                Button("Report & Hide", role: .destructive) {
+                                    vm.report(message: message)
+                                }
+                            } message: {
+                                Text("This will hide it from your view and permanently delete the message from your device.")
+                            }
+                        }
+                        
                     }
                     .fixedSize(horizontal: false, vertical: true)
                 }

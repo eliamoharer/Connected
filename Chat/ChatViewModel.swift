@@ -187,6 +187,46 @@ class ChatViewModel: ObservableObject {
         
     }
     
+    func profileInfo(profile: LLMProfile) -> String {
+        var text = ""
+        
+        text += "Thinking: \(profile.thinking ? "On" : "Off")"
+        
+        if let temperature = profile.temperature {
+            text += "\nTemperature: \(temperature)"
+        }
+        
+        if let maxTokens = profile.max_tokens {
+            text += "\nMax Tokens: \(maxTokens)"
+        }
+        
+        if let topP = profile.top_p {
+            text += "\nTop P: \(topP)"
+        }
+        
+        if let topK = profile.top_k {
+            text += "\nTop K: \(topK)"
+        }
+        
+        if let minP = profile.min_p {
+            text += "\nMin P: \(minP)"
+        }
+        
+        if let presencePenalty = profile.presence_penalty {
+            text += "\nPresence Penalty: \(presencePenalty)"
+        }
+        
+        if let repetitionPenalty = profile.repetition_penalty {
+            text += "\nRepetition Penalty: \(repetitionPenalty)"
+        }
+        
+        return text
+    }
+    
+    func report(message: Message) {
+        messages.removeAll { $0.id == message.id }
+    }
+    
     func abort() {
         activeTask?.cancel()
     }

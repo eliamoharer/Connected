@@ -8,6 +8,11 @@
 import SwiftUI
 
 struct FolderView: View {
+    enum Field: Hashable {
+            case prompt
+            case search
+        }
+    
     @ObservedObject var vm: ChatViewModel
     @ObservedObject var fvm: FolderViewModel
     @State private var searchText: String = ""
@@ -15,10 +20,12 @@ struct FolderView: View {
     @State private var showDelete: Bool = false
     @State private var tempChat: SavedChat?
     @State private var renameString: String = ""
-    @State private var showHelp: Bool = false
     @State private var showSettings: Bool = false
     
     @State private var showAdd: Bool = false
+    @State private var showHelp: Bool = false
+    
+    @FocusState private var focusedField: Field?
     
     private var filteredChats: [SavedChat] {
         guard !searchText.isEmpty else { return vm.savedChats }
@@ -35,12 +42,9 @@ struct FolderView: View {
                 VStack {
                     Button {
                         vm.curLLMProfile = nil
-                        for idx in fvm.buttonEnabled.indices {
-                            fvm.buttonEnabled[idx] = false
-                        }
-                        fvm.buttonEnabled[0] = true
+                        fvm.buttonEnabled = 0
                     } label: {
-                        (fvm.buttonEnabled[0] ? Color.white : Color.black.opacity(0.2))
+                        (fvm.buttonEnabled == 0 ? Color.white : Color.black.opacity(0.2))
                             .frame(width: 75, height: 50)
                             .clipShape(.rect(cornerRadius: 12))
                             .overlay(.black, in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
@@ -56,17 +60,33 @@ struct FolderView: View {
                     VStack {
                         Button {
                             vm.curLLMProfile = profile
-                            for idx in fvm.buttonEnabled.indices {
-                                fvm.buttonEnabled[idx] = false
-                            }
-                            fvm.buttonEnabled[index + 1] = true
+                            fvm.buttonEnabled = index + 1
                         } label: {
-                            (fvm.buttonEnabled[index + 1] ? Color.white : Color.black.opacity(0.2))
+                            (fvm.buttonEnabled == index + 1 ? Color.white : Color.black.opacity(0.2))
                                 .frame(width: 75, height: 50)
                                 .clipShape(.rect(cornerRadius: 12))
                                 .overlay(.black, in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
                         }
-                        
+                        .contextMenu {
+                            Button(role: .destructive) {
+                                fvm.profiles.remove(at: index)
+                                if fvm.buttonEnabled == index + 1 {
+                                    fvm.buttonEnabled = 0
+                                } else if fvm.buttonEnabled != 0 {
+                                    fvm.buttonEnabled -= 1
+                                }
+                            } label: {
+                                Label("Delete Profile", systemImage: "trash")
+                            }
+                        } preview: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "info.circle")
+                                    .imageScale(.large)
+                                Text(vm.profileInfo(profile: profile))
+                                    .font(.body)
+                            }
+                            .padding()
+                        }
                         Text(profile.type ?? "Profile \(fvm.profiles.count)")
                             .font(.caption)
                     }
@@ -93,9 +113,11 @@ struct FolderView: View {
                 Text("Customize how the model responds")
             }
             TextEditor(text: $vm.systemPrompt)
+                .focused($focusedField, equals: .prompt)
                 .background(.clear, in: .rect(cornerRadius: 12))
                 .overlay(.primary, in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
                 .clipShape(.rect(cornerRadius: 12))
+                .frame(minHeight: 100)
             Divider()
             ScrollView(.vertical, showsIndicators: false) {
                 ForEach(filteredChats.reversed()) { chat in
@@ -133,7 +155,6 @@ struct FolderView: View {
                     Button("Cancel", role: .cancel) { }
                     
                     Button("Save") {
-                        // 4. Perform the mutation safely here after confirming
                         if let chat = tempChat,
                            let index = vm.savedChats.firstIndex(where: { $0.id == chat.id }) {
                             vm.savedChats[index].title = renameString
@@ -154,32 +175,47 @@ struct FolderView: View {
                     }
                 }
             )
-            HStack {
-                Button {
-                    //guard !vm.messages.isEmpty else { return }
-                    let newChat = SavedChat(messages: vm.messages)
-                    vm.savedChats.append(newChat)
-                    vm.messages = []
-                } label: {
-                    Image(systemName: "square.and.pencil")
-                        .foregroundStyle(.black)
+            HStack() {
+                if focusedField != .search {
+                    Button {
+                        //guard !vm.messages.isEmpty else { return }
+                        let newChat = SavedChat(messages: vm.messages)
+                        vm.savedChats.append(newChat)
+                        vm.messages = []
+                    } label: {
+                        Image(systemName: "square.and.pencil")
+                            .foregroundStyle(Color("AIText"))
+                    }
+                    .padding()
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: .circle)
                 }
-                .padding()
-                .glassEffect(in: .circle)
-                
                 TextField("Search chats...", text: $searchText)
+                    .focused($focusedField, equals: .search)
                     .autocorrectionDisabled(true)
                     .submitLabel(.search)
                     .padding()
-                    .glassEffect(.clear, in: Capsule())
+                    .frame(height: 44)
+                    .background(.ultraThinMaterial, in: .capsule)
                 
-                Button("Help", systemImage: "questionmark") {
-                    showHelp = true
+                if focusedField != .search {
+                    Button("Help", systemImage: "questionmark") {
+                        showHelp = true
+                    }
+                    .labelStyle(.iconOnly)
+                    .imageScale(.large)
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: .circle)
+                } else {
+                    Button("Close", systemImage: "xmark") {
+                        searchText = ""
+                        focusedField = nil
+                    }
+                    .labelStyle(.iconOnly)
+                    .imageScale(.large)
+                    .frame(width: 44, height: 44)
+                    .background(.ultraThinMaterial, in: .circle)
                 }
-                .labelStyle(.iconOnly)
-                .imageScale(.large)
-                .frame(width: 50, height: 50)
-                .glassEffect(in: .circle)
             }
             .padding()
             
@@ -187,10 +223,13 @@ struct FolderView: View {
         .padding(.horizontal, 16)
         .safeAreaPadding(.top, 75)
         .glassEffect(.regular, in: .rect)
-        .ignoresSafeArea()
+        .ignoresSafeArea(focusedField == .search ? .container : .all, edges: .all)
         .sheet(isPresented: $showAdd) {
             FolderButtonView(fvm: fvm, vm: vm)
                 .presentationDetents([.medium])
+        }
+        .sheet(isPresented: $showHelp) {
+            HelpView()
         }
     }
 }

@@ -8,7 +8,7 @@ class FindEndpoints: ObservableObject {
     @Published var endpoints: [(ip: String, port: Int, models: [String])] = []
     @Published var isScanning = false
     
-    private let ports: [Int] = [7590, 11434, 1234, 8080, 5000]
+    private let ports: [Int] = [7590, 11434, 1234, 8000, 8080, 5000]
     
     func scan() async {
         guard !isScanning else { return }

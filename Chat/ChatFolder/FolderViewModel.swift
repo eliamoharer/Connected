@@ -10,7 +10,7 @@ internal import Combine
 @MainActor
 class FolderViewModel: ObservableObject {
     
-    @Published var buttonEnabled: [Bool] = [true] {
+    @Published var buttonEnabled: Int = 0 {
         didSet {
             UserDefaults.standard.set(buttonEnabled, forKey: buttonKey)
         }
@@ -31,7 +31,7 @@ class FolderViewModel: ObservableObject {
     
     init() {
         loadProfileFromUserDefaults()
-        buttonEnabled = UserDefaults.standard.array(forKey: buttonKey) as? [Bool] ?? [true]
+        buttonEnabled = UserDefaults.standard.integer(forKey: buttonKey)
     }
     
     func createProfile(type: String, temperature: Double?, max_tokens: Int?, top_p: Double?, top_k: Int?, min_p: Double?, presence_penalty: Double?, repetition_penalty: Double?, thinking: Bool) -> LLMProfile {

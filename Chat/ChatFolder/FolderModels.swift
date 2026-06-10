@@ -126,10 +126,7 @@ struct FolderButtonView: View {
                                                          thinking: newThinking)
                         fvm.profiles.append(creation)
                         vm.curLLMProfile = creation
-                        for idx in fvm.buttonEnabled.indices {
-                            fvm.buttonEnabled[idx] = false
-                        }
-                        fvm.buttonEnabled.append(true)
+                        fvm.buttonEnabled = fvm.profiles.count
                         dismiss()
                     }
                 }
