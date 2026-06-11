@@ -71,7 +71,6 @@ struct ChatBubble: View {
                             .foregroundStyle(Color.gray)
                             .padding(.bottom, 0)
                             
-                            // Show thinking text only when this message's toggle is on
                             if stream.showThinking == true {
                                 ThinkingText(stream: stream)
                                     .transition(.blurReplace)
@@ -102,6 +101,7 @@ struct ChatBubble: View {
                                 }
                                 .padding(-12)
                             }
+                            .foregroundStyle(Color("AIText"))
                             .padding(.horizontal, 24)
                             .padding(.top, -10)
                             .alert("Are you sure you want to report this message?", isPresented: $showReport) {

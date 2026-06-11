@@ -26,7 +26,6 @@ struct Message: Identifiable, Codable {
 }
 
 extension Message {
-       // Returns what should be displayed in the bubble's text area
        var currentResponseText: String {
            guard let stream = stream else { return text }
            switch stream.curState {
@@ -83,7 +82,6 @@ struct SavedChat: Identifiable, Codable {
     var messages: [Message]
     var title: String
     
-    // Initialize a new chat and automatically generate the title from the first message
     init(id: UUID = UUID(), messages: [Message]) {
         self.id = id
         self.messages = messages

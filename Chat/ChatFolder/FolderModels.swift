@@ -27,7 +27,7 @@ struct FolderButtonView: View {
     @State private var maxTok = Parameter(type: "Max Output", value: 8192, isEnabled: false)
     @State private var topP = Parameter(type: "Top P", value: 0.95, isEnabled: false)
     @State private var topK = Parameter(type: "Top K", value: 20, isEnabled: false)
-    @State private var minP = Parameter(type: "Min P", value: 0.05, isEnabled: false)
+    @State private var minP = Parameter(type: "Mi   n P", value: 0.05, isEnabled: false)
     @State private var presPen = Parameter(type: "Presence Penalty", value: 1, isEnabled: false)
     @State private var repPen = Parameter(type: "Repetition Penalty", value: 1, isEnabled: false)
     
@@ -70,7 +70,7 @@ struct FolderButtonView: View {
                         
                         Rectangle()
                             .fill(Color.primary.opacity(0.3))
-                            .frame(width: 1) // Set explicit thickness
+                            .frame(width: 1)
                         
                         VStack(spacing: 8) {
                             HStack {

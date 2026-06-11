@@ -43,7 +43,6 @@ struct StreamingMarkdownWebView: UIViewRepresentable {
                 print("Error updating content: \(error.localizedDescription)")
             }
             
-            // Measure the document height after the content renders
             uiView.evaluateJavaScript("document.documentElement.scrollHeight") { result, _ in
                 if let newHeight = result as? CGFloat, newHeight != self.height {
                     DispatchQueue.main.async {

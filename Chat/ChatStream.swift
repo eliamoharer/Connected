@@ -31,7 +31,6 @@ class ChatStream: ObservableObject {
     
     func appendToken(_ token: String, isReasoning: Bool = false) {
         if isReasoning {
-            // First reasoning token = entering thinking mode
             if curState == .idle {
                 curState = .thinking
                 showThinking = false
@@ -40,7 +39,6 @@ class ChatStream: ObservableObject {
             return
         }
         
-        // Non-reasoning token = thinking is done
         if curState == .thinking {
             curState = .responding
         }
