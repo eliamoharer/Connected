@@ -268,7 +268,7 @@ struct FolderView: View {
             }
             .ignoresSafeArea(isSearching ? .container : .all, edges: .all)
         }
-        .glassEffect(.clear, in: .rect)
+        .glassEffect(.regular, in: .rect)
         .ignoresSafeArea()
         .sheet(isPresented: $showAdd) {
             FolderButtonView(fvm: fvm, vm: vm)

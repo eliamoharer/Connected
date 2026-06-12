@@ -149,12 +149,18 @@ class ChatViewModel: ObservableObject {
         
         activeTask?.cancel()
         
+        if let previous = messages.indices.last, let previousMessage = messages[previous].stream {
+            messages[previous].text = previousMessage.fullResponse
+        }
+        
         isResponding = true
         
-        messages.append(Message(text: prompt, isUser: true, images: selectedImages))
+        let userText = prompt
+        let userImages = selectedImages
         prompt = ""
         selectedImages.removeAll()
         
+        messages.append(Message(text: userText, isUser: true, images: userImages))
         let stream = ChatStream()
         
         let response = Message(text: "", isUser: false, stream: stream)
@@ -163,7 +169,9 @@ class ChatViewModel: ObservableObject {
             messages.append(response)
         }
         
+        
         let conversation = Array(messages.dropLast())
+        let responseID = response.id
         
         activeTask = Task {
             _ = await fetchLLMResponse(for: conversation,
@@ -174,13 +182,16 @@ class ChatViewModel: ObservableObject {
                                        systemPrompt: systemPrompt) { token, isReasoning in
                 Task { @MainActor in stream.appendToken(token, isReasoning: isReasoning)
                     
-                    if !isReasoning {
-                        self.messages[self.messages.count - 1].text += token
-                    }
                 }
             }
             
-            await MainActor.run {
+            stream.finish()
+            
+            if let index = messages.firstIndex(where: { $0.id == responseID }) {
+                messages[index].text = stream.fullResponse
+            }
+            
+            if !Task.isCancelled {
                 isResponding = false
             }
         }
@@ -229,5 +240,6 @@ class ChatViewModel: ObservableObject {
     
     func abort() {
         activeTask?.cancel()
+        isResponding = false
     }
 }

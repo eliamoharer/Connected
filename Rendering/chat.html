@@ -1,79 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="katex.min.css">
-    <script src="katex.min.js"></script>
-    <script src="marked.min.js"></script>
-    <script src="auto-render.min.js"></script>
-    <script src="purify.min.js"></script>
-            
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-        }
-        #markcontain {
-            width: 100%;
-            word-wrap: break-word;
-            font-family: -apple-system, sans-serif;
-            font-size: 17px;
-            line-height: 1.4;
-            color: #2b2a27;
-            
-        }
-        
-        @media (prefers-color-scheme: dark) {
+        <link rel="stylesheet" href="katex.min.css">
+        <link rel="stylesheet" href="texmath.min.css">
+        <script src="katex.min.js"></script>
+        <script src="markdown-it.min.js"></script>
+        <script src="texmath.min.js"></script>
+        <script src="purify.min.js"></script>
+                
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+            }
             #markcontain {
-                color: #f4f4f6;
+                /* flow-root contains child margins (e.g. <p>) so the reported
+                   height isn't ~1 line short due to margin collapsing. */
+                display: flow-root;
+                width: 100%;
+                word-wrap: break-word;
+                font-family: -apple-system, sans-serif;
+                font-size: 17px;
+                line-height: 1.4;
+                color: #2b2a27;
             }
-        }
-    </style>
-</head>
-<body>
-    <div id="markcontain"></div>
-        
-    <script>
-        const container = document.getElementById('markcontain');
-        
-        function updateContent(rawMarkdown) {
-            if (!rawMarkdown || typeof rawMarkdown !== 'string') {
-                return;
+            #markcontain pre {
+                overflow-x: auto;
+                background: rgba(127, 127, 127, 0.12);
+                padding: 10px 12px;
+                border-radius: 10px;
+            }
+            #markcontain code {
+                font-family: ui-monospace, monospace;
+                font-size: 15px;
+            }
+            #markcontain table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                border-collapse: collapse;
+            }
+            #markcontain th, #markcontain td {
+                border: 1px solid rgba(127, 127, 127, 0.4);
+                padding: 4px 10px;
+            }
+            #markcontain blockquote {
+                margin: 0;
+                padding-left: 12px;
+                border-left: 3px solid rgba(127, 127, 127, 0.4);
+            }
+            #markcontain img {
+                max-width: 100%;
+            }
+            #markcontain eqn {
+                display: block;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding: 2px 0;
             }
             
-            try {
-                const cleaned = rawMarkdown.replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "");
-                
-                const rawHTML = marked.parse(cleaned, { gfm: true, breaks: true })
-                
-                let safeHTML = rawHTML;
-                if (typeof DOMPurify === 'object') {
-                    safeHTML = DOMPurify.sanitize(rawHTML)
+            @media (prefers-color-scheme: dark) {
+                #markcontain {
+                    color: #f4f4f6;
                 }
-                
-                container.innerHTML = safeHTML;
-                
-                if (typeof renderMathInElement === 'function') {
-                    renderMathInElement(container, {
-                        delimiters: [
-                                     {left: '$$', right: '$$', display: true},
-                                     {left: '$', right: '$', display: false},
-                                     {left: '\\(', right: '\\)', display: false},
-                                     {left: '\\[', right: '\\]', display: true}
-                                     ],
-                                     throwOnError: false
-                    });
-                }
-            } catch (error) {
-                console.error('Render failure:', error);
-                container.innerHTML = '<p style="color:red;">Render Failure</p>'
             }
-        }
+        </style>
+    </head>
+    <body>
+        <div id="markcontain"></div>
         
-        window.updateContent = updateContent;
-    </script>
-</body>
+        <script>
+                const container = document.getElementById('markcontain');
+        
+        const md = markdownit({ html: false, linkify: true, breaks: true })
+        .use(texmath, {
+            engine: katex,
+            delimiters: ['dollars', 'brackets'],
+            katexOptions: { throwOnError: false }
+        });
+            
+            function updateContent(rawMarkdown) {
+                if (typeof rawMarkdown !== 'string') {
+                    return;
+                }
+                
+                try {
+                    const cleaned = rawMarkdown
+                    .replace(/^[\u200B\u200C\u200D\u200E\u200F\uFEFF]/, "")
+                    // Give \[ ... \] display math its own paragraph; LLMs often
+                    // emit it directly under text, where markdown-it would
+                    // otherwise swallow it into the paragraph.
+                    .replace(/^([ \t]*)\\\[/gm, "\n$1\\[")
+                    .replace(/\\\]([ \t]*)$/gm, "\\]\n");
+                    
+                    let html = md.render(cleaned);
+                    
+                    if (typeof DOMPurify === 'object') {
+                        // eq/eqn are texmath's math wrapper tags.
+                        html = DOMPurify.sanitize(html, { ADD_TAGS: ['eq', 'eqn'] });
+                    }
+                    
+                    container.innerHTML = html;
+                } catch (error) {
+                    console.error('Render failure:', error);
+                    container.innerHTML = '<p style="color:red;">Render Failure</p>'
+                }
+            }
+            
+            new ResizeObserver(() => {
+                window.webkit?.messageHandlers?.heightChanged?.postMessage(Math.ceil(container.getBoundingClientRect().height));
+            }).observe(container);
+            
+            window.updateContent = updateContent;
+        </script>
+    </body>
 </html>

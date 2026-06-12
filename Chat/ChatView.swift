@@ -12,6 +12,7 @@ struct ChatView: View {
     @ObservedObject var vm: ChatViewModel
     @State private var sendTapped = false
     @State private var pics: [PhotosPickerItem] = []
+    @State private var textID = UUID()
     
     var body: some View {
         VStack(spacing: 12) {
@@ -49,11 +50,13 @@ struct ChatView: View {
                 TextField("Type...",  text: $vm.prompt, axis: .vertical)
                     .lineLimit(1...5)
                     .foregroundStyle(Color("AIText"))
+                    .id(textID)
                 if !vm.isResponding {
                     Button(action: {
                         print("Sent: \(vm.prompt)")
                         sendTapped.toggle()
                         vm.sendMessage()
+                        textID = UUID()
                     }) {
                         HStack {
                             Image(systemName: "arrow.up")

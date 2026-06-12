@@ -258,6 +258,5 @@ struct HelpView: View {
                 }
             }
         }
-        
     }
 }

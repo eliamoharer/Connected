@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 
 struct Message: Identifiable, Codable {
-    let id = UUID()
+    var id = UUID()
     var text: String = ""
     let isUser: Bool
     

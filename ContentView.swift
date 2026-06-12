@@ -10,13 +10,15 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var vm = ChatViewModel()
     @StateObject private var fvm = FolderViewModel()
+    @State private var position = ScrollPosition(idType: UUID.self)
+    
+    @FocusState private var chatFocus: Bool
     
     @AppStorage("validToS") private var validToS = false
-
+    
     var body: some View {
         if validToS {
-            GeometryReader { proxy in
-                let drawerWidth = proxy.size.width
+            let drawerWidth = UIScreen.main.bounds.width
                 
                 ZStack(alignment: .leading) {
                     Color("BackgroundColor")
@@ -29,10 +31,15 @@ struct ContentView: View {
                                     currentMessage in ChatBubble(message: currentMessage, vm: vm)
                                 }
                             }
+                            .scrollTargetLayout()
                             .animation(.bouncy, value: vm.messages.count)
                         }
+                        .scrollPosition($position)
                         .ignoresSafeArea(edges: .top)
-                        .contentMargins(.top, 120, for: .scrollContent)
+                        .defaultScrollAnchor(.bottom, for: .initialOffset)
+                        .defaultScrollAnchor(.bottom, for: .sizeChanges)
+                        .defaultScrollAnchor(.top, for: .alignment)
+                        .contentMargins(.top, 90, for: .scrollContent)
                         .scrollDismissesKeyboard(.interactively)
                         
                         .overlay(alignment: .top) {
@@ -65,11 +72,12 @@ struct ContentView: View {
                             }
                         }
                         
-                        // Glassmorphic Input Box
                         .safeAreaInset(edge: .bottom) {
-                            ChatView(vm: vm)
-                                .opacity(fvm.isFolderOpen ? 0 : 1)
-                        }
+                                ChatView(vm: vm)
+                                    .focused($chatFocus)
+                                    .opacity(fvm.isFolderOpen ? 0 : 1)
+                                    //.animation(.snappy, value: vm.prompt)
+                            }
                         .ignoresSafeArea(.container, edges: .bottom)
                     }
                     .allowsHitTesting(!fvm.isFolderOpen)
@@ -82,8 +90,6 @@ struct ContentView: View {
                 }
                 .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
                 .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
-                
-            }
             
         }  else {
             ToSView()

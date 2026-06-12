@@ -33,10 +33,6 @@ struct ChatMenuView: View {
             }
             
             Section(header: Text("Models")) {
-//                if !vm.model.isEmpty {
-//                    ParamMenuView(vm: vm)
-//                }
-                
                 if !vm.models.isEmpty {
                     Picker("Model", selection: $vm.model) {
                         ForEach(vm.models, id: \.self) { endModel in

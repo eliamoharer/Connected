@@ -62,17 +62,9 @@ func fetchLLMResponse(for messages: [Message],
         if let presencePenalty = curProfile.presence_penalty { body["presence_penalty"] = presencePenalty }
         if let repetitionPenalty = curProfile.repetition_penalty { body["repetition_penalty"] = repetitionPenalty }
         
-        if !curProfile.thinking {
-            body["chat_template_kwargs"] = [
-                "enable_thinking": false
-            ]
-        }
-        
-        if curProfile.thinking {
-            body["chat_template_kwargs"] = [
-                "enable_thinking": true
-            ]
-        }
+        body["chat_template_kwargs"] = [
+            "enable_thinking": curProfile.thinking
+        ]
     }
     
     do {
@@ -105,7 +97,7 @@ func fetchLLMResponse(for messages: [Message],
             }
         } catch {
             if !(error is CancellationError) {
-                print("Error: \(error)")
+                onToken("\n\n**[Error: \(error.localizedDescription)]**", false)
             }
         }
 }

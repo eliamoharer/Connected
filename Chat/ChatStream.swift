@@ -19,50 +19,60 @@ class ChatStream: ObservableObject {
     @Published var visibleMarkdown: String = ""
     @Published var curState: StreamState = .idle
     @Published var showThinking: Bool?
+    @Published var streamHeight: CGFloat = 10
     
+    private var accumulatedThinking: String = ""
     private var accumulatedResponse: String = ""
     private var displayUpdateTimer: Timer?
     private var pendingResponseUpdate = false
     private let throttleInterval: TimeInterval = 0.06
     
+    var fullResponse: String { accumulatedResponse }
+    
     init() {
         startThrottler()
     }
     
-    func appendToken(_ token: String, isReasoning: Bool = false) {
+    func appendToken(_ token: String, isReasoning: Bool) {
         if isReasoning {
-            if curState == .idle {
+            if curState == .idle || curState == .responding {
                 curState = .thinking
                 showThinking = false
             }
-            thinkingText += token
-            return
+            accumulatedThinking += token
+        } else {
+            if curState != .responding {
+                curState = .responding
+            }
+            accumulatedResponse += token
         }
-        
-        if curState == .thinking {
-            curState = .responding
-        }
-        
-        accumulatedResponse += token
         pendingResponseUpdate = true
+    }
+    
+    func finish() {
+        displayUpdateTimer?.invalidate()
+        displayUpdateTimer = nil
+        flush()
+        curState = .idle
+    }
+    
+    private func flush() {
+        if thinkingText != accumulatedThinking {
+            thinkingText = accumulatedThinking
+        }
+        if visibleMarkdown != accumulatedResponse {
+            visibleMarkdown = accumulatedResponse
+        }
+        pendingResponseUpdate = false
     }
     
     private func startThrottler() {
         displayUpdateTimer = Timer.scheduledTimer(withTimeInterval: throttleInterval, repeats: true) { [weak self] _ in
-            guard let self = self, self.pendingResponseUpdate else { return }
-            self.visibleMarkdown = self.accumulatedResponse
-            self.pendingResponseUpdate = false
+            guard let self, self.pendingResponseUpdate else { return }
+            self.flush()
         }
         
         RunLoop.main.add(displayUpdateTimer!, forMode: .common)
-    }
-    
-    func reset() {
-        thinkingText = ""
-        visibleMarkdown = ""
-        accumulatedResponse = ""
-        curState = .idle
-        showThinking = nil
     }
     
     deinit {
