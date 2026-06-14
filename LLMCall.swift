@@ -13,23 +13,23 @@ func fetchLLMResponse(for messages: [Message],
                       profile: LLMProfile?,
                       sysPromptIsEnabled: Bool,
                       systemPrompt: String,
+                      APIKey: String,
                       onToken: @escaping (String, Bool) -> Void) async {
     guard let url = URL(string: "http://" + endpoint + "/v1/chat/completions") else { return }
     
     var request = URLRequest(url: url)
     request.httpMethod = "POST"
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-    request.addValue("Bearer 2000", forHTTPHeaderField: "Authorization")
+    
+    request.addValue("Bearer \(APIKey)", forHTTPHeaderField: "Authorization")
     
     var conversation = messages.map { msg -> [String: Any] in
         if msg.isUser, let images = msg.images, !images.isEmpty {
             var content: [[String: Any]] = [["type": "text", "text": msg.text]]
             for image in images {
-                if let resizedImage = image.resizeMax(maxDim: 512) {
-                    if let imageData = resizedImage.jpegData(compressionQuality: 0.5) {
-                        let base64 = imageData.base64EncodedString()
-                        content.append(["type": "image_url", "image_url": ["url": "data:image/jpeg;base64,\(base64)"]])
-                    }
+                if let imageData = image.resizeMax(maxDim: 512).jpegData(compressionQuality: 0.5) {
+                    let base64 = imageData.base64EncodedString()
+                    content.append(["type": "image_url", "image_url": ["url": "data:image/jpeg;base64,\(base64)"]])
                 }
             }
             return ["role": "user", "content": content]

@@ -10,7 +10,7 @@ class FindEndpoints: ObservableObject {
     
     private let ports: [Int] = [7590, 11434, 1234, 8000, 8080, 5000]
     
-    func scan() async {
+    func scan(key: String) async {
         guard !isScanning else { return }
         
         isScanning = true
@@ -26,7 +26,7 @@ class FindEndpoints: ObservableObject {
                 
                 for port in ports {
                     group.addTask {
-                        await self.check(ip: ip, port: port)
+                        await self.check(ip: ip, port: port, key: key)
                     }
                 }
             }
@@ -79,11 +79,15 @@ class FindEndpoints: ObservableObject {
         return nil
     }
     
-    func check(ip: String, port: Int) async -> (String, Int, [String])? {
+    func check(ip: String, port: Int, key: String) async -> (String, Int, [String])? {
         guard let url = URL(string: "http://\(ip):\(port)/v1/models") else { return nil }
         
         var request = URLRequest(url: url)
         request.timeoutInterval = 5
+        
+        if !key.isEmpty {
+            request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        }
         
         do {
             let (data,response) = try await URLSession.shared.data(for: request)

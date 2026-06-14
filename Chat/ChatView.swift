@@ -21,7 +21,7 @@ struct ChatView: View {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
                         ForEach(vm.selectedImages.indices, id: \.self) { image in
                             ZStack(alignment: .topTrailing) {
-                                Image(uiImage: vm.selectedImages[image].resizeMax(maxDim: 100)!)
+                                Image(uiImage: vm.selectedImages[image])
                                     .resizable()
                                     .scaledToFill()
                                     .frame(maxWidth: 100, maxHeight: 100)
@@ -110,11 +110,13 @@ struct ChatView: View {
                 }
                 .padding(-12)
                 .onChange(of: pics) { _, newPics in
+                    guard !newPics.isEmpty else { return }
                     Task {
                         for pic in newPics {
                             if let data = try? await pic.loadTransferable(type: Data.self),
                                let uiImage = UIImage(data: data) {
-                                await MainActor.run { vm.selectedImages.append(uiImage) }
+                                let resized = await Task.detached(priority: .userInitiated) { await uiImage.resizeMax(maxDim: 512) }.value
+                                await MainActor.run { vm.selectedImages.append(resized) }
                             }
                         }
                         pics.removeAll()

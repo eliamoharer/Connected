@@ -11,13 +11,16 @@ struct ChatMenuView: View {
     @ObservedObject var vm: ChatViewModel
     @ObservedObject var scanner: FindEndpoints
     @State private var showPrompt = false
+    @State private var showKey = false
     @State private var tailEndpoint: String = ""
+    @State private var APIKey: String = ""
+ 
     
     var body: some View {
         Menu {
             Section(header: Text("Endpoints")) {
                 if vm.scanner.isScanning {
-                    Button("Scanning...") { }
+                    Button("Scanning...") { }.disabled(true)
                 }
                 
                 ForEach(Array(vm.scanner.endpoints.enumerated()), id: \.offset) { _, foundEndpoint in
@@ -46,7 +49,7 @@ struct ChatMenuView: View {
             Divider()
             
             Button {
-                Task { await vm.scanner.scan() }
+                Task { await vm.scanner.scan(key: vm.APIKey) }
             } label: {
                 Text(vm.endpoint.isEmpty ? "Find Endpoints.." : "Refresh Endpoints..")
                 
@@ -55,6 +58,13 @@ struct ChatMenuView: View {
                 }
             }
             .menuActionDismissBehavior(.disabled)
+            
+            Button {
+                showKey = true
+            } label: {
+                Text("Auth Key")
+                Text("\(vm.APIKey.isEmpty ? "Empty" : "\(vm.APIKey)")")
+            }
             
             Button {
                 showPrompt = true
@@ -80,7 +90,7 @@ struct ChatMenuView: View {
                 let parts = tailEndpoint.split(separator: ":")
                 if parts.count == 2, let port = Int(parts[1]) {
                     Task {
-                        let result = await scanner.check(ip: String(parts[0]), port: port)
+                        let result = await scanner.check(ip: String(parts[0]), port: port, key: vm.APIKey)
                         await MainActor.run {
                             if (result != nil) {
                                 vm.endpoint = tailEndpoint
@@ -94,6 +104,17 @@ struct ChatMenuView: View {
             }
         } message: {
             Text("Enter your Tailscale IP and desired port")
+        }
+        .alert("Authentication Key", isPresented: $showKey) {
+            TextField("Auth Key", text: $APIKey)
+                .keyboardType(.numbersAndPunctuation)
+                .autocapitalization(.none)
+            Button("Cancel", role: .cancel) { APIKey = "" }
+            Button("Save") {
+                vm.APIKey = APIKey
+            }
+        } message: {
+            Text("Some local providers allow you to set an auth key (i.e a password).\n\nThis prevents others on your network from accessing your endpoint.")
         }
     }
 }

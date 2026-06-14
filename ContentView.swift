@@ -10,7 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var vm = ChatViewModel()
     @StateObject private var fvm = FolderViewModel()
-    @State private var position = ScrollPosition(idType: UUID.self)
+    //@State private var position = ScrollPosition(idType: Message.ID.self)
     
     @FocusState private var chatFocus: Bool
     
@@ -31,14 +31,12 @@ struct ContentView: View {
                                     currentMessage in ChatBubble(message: currentMessage, vm: vm)
                                 }
                             }
-                            .scrollTargetLayout()
+                            //.scrollTargetLayout()
                             .animation(.bouncy, value: vm.messages.count)
                         }
-                        .scrollPosition($position)
+                        //.scrollPosition($position)
                         .ignoresSafeArea(edges: .top)
-                        .defaultScrollAnchor(.bottom, for: .initialOffset)
                         .defaultScrollAnchor(.bottom, for: .sizeChanges)
-                        .defaultScrollAnchor(.top, for: .alignment)
                         .contentMargins(.top, 90, for: .scrollContent)
                         .scrollDismissesKeyboard(.interactively)
                         
@@ -73,11 +71,11 @@ struct ContentView: View {
                         }
                         
                         .safeAreaInset(edge: .bottom) {
-                                ChatView(vm: vm)
-                                    .focused($chatFocus)
-                                    .opacity(fvm.isFolderOpen ? 0 : 1)
-                                    //.animation(.snappy, value: vm.prompt)
-                            }
+                            ChatView(vm: vm)
+                                .focused($chatFocus)
+                                .opacity(fvm.isFolderOpen ? 0 : 1)
+                            //.animation(.snappy, value: vm.prompt)
+                        }
                         .ignoresSafeArea(.container, edges: .bottom)
                     }
                     .allowsHitTesting(!fvm.isFolderOpen)

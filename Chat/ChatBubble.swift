@@ -18,7 +18,7 @@ struct ChatBubble: View {
                     if let images = message.images, !images.isEmpty {
                         LazyVGrid(columns: [GridItem(.fixed(64)), GridItem(.fixed(64)), GridItem(.fixed(64)), GridItem(.fixed(64))], alignment: .trailing) {
                             ForEach(images.indices, id: \.self) { index in
-                                Image(uiImage: images[index].resizeMax(maxDim: 128)!)
+                                Image(uiImage: images[index])
                                     .resizable()
                                     .scaledToFit()
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -87,6 +87,7 @@ private struct StreamingMessageView: View {
             StreamingMarkdownWebView(markdown: stream.visibleMarkdown, height: $stream.streamHeight)
                 .frame(minHeight: stream.streamHeight)
                 .padding(.horizontal, 24)
+                .animation(.none, value: stream.showThinking)
             
             if stream.curState == .idle && !stream.visibleMarkdown.isEmpty {
                 MessageActions(text: stream.visibleMarkdown) {

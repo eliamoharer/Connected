@@ -10,7 +10,7 @@ internal import Combine
 
 @MainActor
 class ChatViewModel: ObservableObject {
-    @ObservedObject var scanner = FindEndpoints()
+    let scanner = FindEndpoints()
     
     private var activeTask: Task<Void, Never>?
     
@@ -21,6 +21,7 @@ class ChatViewModel: ObservableObject {
     private let historyKey = "persistedSavedChats"
     private let systemPromptKey = "lastSystemPrompt"
     private let systemPromptIsEnabledKey = "lastSystemPromptIsEnabled"
+    private let APIKeyKey = "lastSelectedAPIKey"
     
     @Published var systemPrompt: String = "" {
         didSet {
@@ -33,6 +34,13 @@ class ChatViewModel: ObservableObject {
         }
     }
     
+    @Published var APIKey: String = "" {
+        didSet {
+            UserDefaults.standard.set(APIKey, forKey: APIKeyKey)
+        }
+    }
+    @Published var positionTick: Int = 0
+    //@Published var position: Message.ID?
     @Published var isResponding: Bool = false
     @Published var prompt: String = ""
     @Published var messages: [Message] = []
@@ -72,6 +80,7 @@ class ChatViewModel: ObservableObject {
         
         systemPrompt = UserDefaults.standard.string(forKey: systemPromptKey) ?? ""
         sysPromptIsEnabled = UserDefaults.standard.bool(forKey: systemPromptIsEnabledKey)
+        APIKey = UserDefaults.standard.string(forKey: APIKeyKey) ?? ""
         
         if let savedEndpoint = UserDefaults.standard.string(forKey: endpointKey) {
             isTail = UserDefaults.standard.bool(forKey: tailKey)
@@ -79,7 +88,7 @@ class ChatViewModel: ObservableObject {
             let parts = savedEndpoint.split(separator: ":")
             if parts.count == 2, let port = Int(parts[1]) {
                 Task {
-                    let result = await scanner.check(ip: String(parts[0]), port: port)
+                    let result = await scanner.check(ip: String(parts[0]), port: port, key: APIKey)
                     await MainActor.run {
                         if result != nil {
                             endpoint = savedEndpoint
@@ -160,11 +169,14 @@ class ChatViewModel: ObservableObject {
         prompt = ""
         selectedImages.removeAll()
         
-        messages.append(Message(text: userText, isUser: true, images: userImages))
+        let userMessage = Message(text: userText, isUser: true, images: userImages)
         let stream = ChatStream()
         
-        let response = Message(text: "", isUser: false, stream: stream)
+        messages.append(userMessage)
+        positionTick += 1
         
+        let response = Message(text: "", isUser: false, stream: stream)
+        //position = response.id
         withAnimation(.bouncy()) {
             messages.append(response)
         }
@@ -173,29 +185,38 @@ class ChatViewModel: ObservableObject {
         let conversation = Array(messages.dropLast())
         let responseID = response.id
         
-        activeTask = Task {
+        let curModel = model
+        let curEndpoint = endpoint
+        let curProfile = curLLMProfile
+        let sysEnabled = sysPromptIsEnabled
+        let sysPrompt = systemPrompt
+        let key = APIKey
+        
+        activeTask = Task.detached(priority: .userInitiated) {
             _ = await fetchLLMResponse(for: conversation,
-                                       model: model,
-                                       endpoint: endpoint,
-                                       profile: curLLMProfile,
-                                       sysPromptIsEnabled: sysPromptIsEnabled,
-                                       systemPrompt: systemPrompt) { token, isReasoning in
-                Task { @MainActor in stream.appendToken(token, isReasoning: isReasoning)
+                                       model: curModel,
+                                       endpoint: curEndpoint,
+                                       profile: curProfile,
+                                       sysPromptIsEnabled: sysEnabled,
+                                       systemPrompt: sysPrompt,
+                                       APIKey: key) { token, isReasoning in
+                Task { @MainActor in
+                    stream.appendToken(token, isReasoning: isReasoning)
                     
                 }
             }
-            
-            stream.finish()
-            
-            if let index = messages.firstIndex(where: { $0.id == responseID }) {
-                messages[index].text = stream.fullResponse
-            }
-            
-            if !Task.isCancelled {
-                isResponding = false
+            Task { @MainActor in
+                stream.finish()
+                
+                if let index = self.messages.firstIndex(where: { $0.id == responseID }) {
+                    self.messages[index].text = stream.fullResponse
+                }
+                
+                if !Task.isCancelled {
+                    self.isResponding = false
+                }
             }
         }
-        
     }
     
     func profileInfo(profile: LLMProfile) -> String {

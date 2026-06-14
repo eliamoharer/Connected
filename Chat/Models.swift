@@ -14,8 +14,6 @@ struct Message: Identifiable, Codable {
     let isUser: Bool
     
     var images: [UIImage]?
-    var thinkingText: String = ""
-    var visibleMarkdown: String = ""
     var stream: ChatStream?
     
     enum CodingKeys: String, CodingKey {
@@ -25,19 +23,9 @@ struct Message: Identifiable, Codable {
     }
 }
 
-extension Message {
-       var currentResponseText: String {
-           guard let stream = stream else { return text }
-           switch stream.curState {
-           case .thinking:  return stream.thinkingText
-           case .responding: return stream.visibleMarkdown
-           case .idle:      return ""
-           }
-       }
-   }
 
 extension UIImage {
-    func resizeMax(maxDim: CGFloat) -> UIImage? {
+    func resizeMax(maxDim: CGFloat) -> UIImage {
         let currentMax = max(size.width, size.height)
         
         if currentMax <= maxDim {

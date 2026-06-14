@@ -53,7 +53,7 @@ class FolderViewModel: ObservableObject {
             }
             .onEnded { [self] value in
                 guard isDragging else { return }
-                withAnimation(.interactiveSpring(response: 0.28, dampingFraction: 0.86)) {
+                withAnimation(.interactiveSpring(response: 0.30, dampingFraction: 0.85)) {
                     if value.translation.width > 8 {
                         isFolderOpen = true
                         drawerPosition = 0
