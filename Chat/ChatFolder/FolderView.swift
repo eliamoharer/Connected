@@ -111,7 +111,7 @@ struct FolderView: View {
                         Text("Personal Instructions")
                         Text("Customize how the model responds")
                     }
-                    ZStack(alignment: .bottomTrailing) {
+                    VStack {
                         TextEditor(text: $vm.systemPrompt)
                             .scrollContentBackground(.hidden)
                             .background(.clear, in: .rect(cornerRadius: 12))
@@ -119,10 +119,11 @@ struct FolderView: View {
                             .clipShape(.rect(cornerRadius: 12))
                             .frame(minHeight: 100)
                             .focused($editorFocus)
-                            .padding(.bottom, !editorFocus ? 0 : 16)
+                            //.padding(.bottom, !editorFocus ? 0 : 16)
                         
                         if editorFocus {
                             HStack(spacing: -8) {
+                                Spacer()
                                 Button("Clear") {
                                     vm.systemPrompt = ""
                                 }
@@ -151,6 +152,7 @@ struct FolderView: View {
                                 .buttonStyle(.glassProminent)
                                 .padding()
                             }
+                            .padding(.vertical, -12)
                         }
                     }
                     .animation(.bouncy, value: editorFocus)
@@ -268,7 +270,7 @@ struct FolderView: View {
             }
             .ignoresSafeArea(isSearching ? .container : .all, edges: .all)
         }
-        .glassEffect(.regular, in: .rect)
+        .glassEffect(fvm.isFolderOpen ? .regular : .clear, in: .rect)
         .ignoresSafeArea()
         .sheet(isPresented: $showAdd) {
             FolderButtonView(fvm: fvm, vm: vm)
@@ -284,3 +286,5 @@ struct FolderView: View {
 #Preview {
     FolderView(vm: ChatViewModel(), fvm: FolderViewModel())
 }
+
+
