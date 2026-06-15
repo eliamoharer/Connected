@@ -6,18 +6,31 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct ChatMenuView: View {
     @ObservedObject var vm: ChatViewModel
     @ObservedObject var scanner: FindEndpoints
     @State private var showPrompt = false
     @State private var showKey = false
+    @State private var showPaywall = false
     @State private var tailEndpoint: String = ""
     @State private var APIKey: String = ""
  
     
     var body: some View {
         Menu {
+            Section(header: Text("Models")) {
+                if !vm.models.isEmpty {
+                    Picker("Model", selection: $vm.model) {
+                        ForEach(vm.models, id: \.self) { endModel in
+                            Text(endModel)
+                                .tag(endModel)
+                        }
+                    }
+                }
+            }
+            
             Section(header: Text("Endpoints")) {
                 if vm.scanner.isScanning {
                     Button("Scanning...") { }.disabled(true)
@@ -32,17 +45,6 @@ struct ChatMenuView: View {
                         vm.models = foundEndpoint.models
                     }
                     .menuActionDismissBehavior(.disabled)
-                }
-            }
-            
-            Section(header: Text("Models")) {
-                if !vm.models.isEmpty {
-                    Picker("Model", selection: $vm.model) {
-                        ForEach(vm.models, id: \.self) { endModel in
-                            Text(endModel)
-                                .tag(endModel)
-                        }
-                    }
                 }
             }
             
@@ -67,9 +69,14 @@ struct ChatMenuView: View {
             }
             
             Button {
-                showPrompt = true
+                if vm.isTailscaleUnlocked {
+                    showPrompt = true
+                } else {
+                    showPaywall = true
+                }
             } label: {
-                Text("Tailscale")
+                Text(vm.isTailscaleUnlocked ? "Tailscale" : "Tailscale ($0.99)")
+                
                 if !vm.endpoint.isEmpty && vm.isTail {
                     Text("@ \(vm.endpoint)")
                 }
@@ -115,6 +122,22 @@ struct ChatMenuView: View {
             }
         } message: {
             Text("Some local providers allow you to set an auth key (i.e a password).\n\nThis prevents others on your network from accessing your endpoint.")
+        }
+        .sheet(isPresented: $showPaywall) {
+            VStack {
+                Text("Connected Premium")
+                    .font(.largeTitle.bold())
+                    .padding(.top, 30)
+                
+                Text("Unlock Tailscale networking to safely tunnel to your remote LLM instances.")
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                
+                StoreView(ids: ["eliamoharer.connect.customunlocked"])
+                    .storeButton(.visible, for: .restorePurchases)
+            }
+            .presentationDetents([.medium, .large])
         }
     }
 }

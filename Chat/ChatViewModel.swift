@@ -7,10 +7,16 @@
 
 import SwiftUI
 internal import Combine
+import FoundationModels
+import StoreKit
 
 @MainActor
 class ChatViewModel: ObservableObject {
     let scanner = FindEndpoints()
+    
+    @Published var localModel = SystemLanguageModel.default
+    
+    private var localSession = LanguageModelSession()
     
     private var activeTask: Task<Void, Never>?
     
@@ -39,8 +45,9 @@ class ChatViewModel: ObservableObject {
             UserDefaults.standard.set(APIKey, forKey: APIKeyKey)
         }
     }
-    @Published var positionTick: Int = 0
-    //@Published var position: Message.ID?
+    
+    @Published var editingMessageID: Message.ID? = nil
+    
     @Published var isResponding: Bool = false
     @Published var prompt: String = ""
     @Published var messages: [Message] = []
@@ -74,6 +81,8 @@ class ChatViewModel: ObservableObject {
         }
     }
     
+    @Published var isTailscaleUnlocked: Bool = false
+    
     init() {
         loadHistoryFromUserDefaults()
         loadProfileFromUserDefaults()
@@ -104,6 +113,20 @@ class ChatViewModel: ObservableObject {
                             endpoint = ""
                         }
                     }
+                }
+            }
+        }
+        
+        Task {
+            for await result in StoreKit.Transaction.currentEntitlements(for: "eliamoharer.connect.customunlocked") {
+                if case .verified(let transaction) = result {
+                    self.isTailscaleUnlocked = transaction.revocationDate == nil
+                }
+            }
+            
+            for await result in StoreKit.Transaction.updates {
+                if case .verified(let transaction) = result {
+                    self.isTailscaleUnlocked = transaction.revocationDate == nil
                 }
             }
         }
@@ -173,10 +196,9 @@ class ChatViewModel: ObservableObject {
         let stream = ChatStream()
         
         messages.append(userMessage)
-        positionTick += 1
         
         let response = Message(text: "", isUser: false, stream: stream)
-        //position = response.id
+        
         withAnimation(.bouncy()) {
             messages.append(response)
         }
@@ -255,8 +277,82 @@ class ChatViewModel: ObservableObject {
         return text
     }
     
+    func resendMessage() {
+        messages.removeLast()
+        activeTask?.cancel()
+        
+        isResponding = true
+        
+        let stream = ChatStream()
+        let response = Message(text: "", isUser: false, stream: stream)
+        
+        withAnimation(.bouncy()) {
+            messages.append(response)
+        }
+        
+        
+        let conversation = Array(messages.dropLast())
+        let responseID = response.id
+        
+        let curModel = model
+        let curEndpoint = endpoint
+        let curProfile = curLLMProfile
+        let sysEnabled = sysPromptIsEnabled
+        let sysPrompt = systemPrompt
+        let key = APIKey
+        
+        activeTask = Task.detached(priority: .userInitiated) {
+            _ = await fetchLLMResponse(for: conversation,
+                                       model: curModel,
+                                       endpoint: curEndpoint,
+                                       profile: curProfile,
+                                       sysPromptIsEnabled: sysEnabled,
+                                       systemPrompt: sysPrompt,
+                                       APIKey: key) { token, isReasoning in
+                Task { @MainActor in
+                    stream.appendToken(token, isReasoning: isReasoning)
+                    
+                }
+            }
+            Task { @MainActor in
+                stream.finish()
+                
+                if let index = self.messages.firstIndex(where: { $0.id == responseID }) {
+                    self.messages[index].text = stream.fullResponse
+                }
+                
+                if !Task.isCancelled {
+                    self.isResponding = false
+                }
+            }
+        }
+    }
+    
+    func sendLocalMessage() async {
+        do {
+            messages.append(Message(text: prompt, isUser: true, images: selectedImages))
+            let userText = prompt
+            prompt = ""
+            let response = try await localSession.respond(to: userText)
+            
+            await MainActor.run {
+                messages.append(Message(text: response.content, isUser: false))
+            }
+        } catch {
+            messages.append(Message(text: error.localizedDescription, isUser: false))
+        }
+    }
+    
     func report(message: Message) {
         messages.removeAll { $0.id == message.id }
+    }
+    
+    func edit(text: String, editmessage: Message) {
+        if let index = messages.firstIndex(where: { $0.id == editmessage.id }) {
+            messages[index].text = text
+            messages[index].stream = nil
+        }
+        editingMessageID = nil
     }
     
     func abort() {

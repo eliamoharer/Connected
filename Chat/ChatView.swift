@@ -7,6 +7,7 @@
 
 import SwiftUI
 import PhotosUI
+import FoundationModels
 
 struct ChatView: View {
     @ObservedObject var vm: ChatViewModel
@@ -55,7 +56,15 @@ struct ChatView: View {
                     Button(action: {
                         print("Sent: \(vm.prompt)")
                         sendTapped.toggle()
-                        vm.sendMessage()
+                        if vm.localModel.isAvailable && vm.model.isEmpty {
+                            Task {
+                                await vm.sendLocalMessage()
+                            }
+                        } else if !vm.model.isEmpty {
+                            vm.sendMessage()
+                        } else {
+                            vm.messages.append(Message(text: "No model available.", isUser: false))
+                        }
                         textID = UUID()
                     }) {
                         HStack {
@@ -124,12 +133,18 @@ struct ChatView: View {
                 }
                 
                 Spacer()
-                Text(vm.model.isEmpty ? "None" : "\(vm.model): \(vm.curLLMProfile?.type ?? "Native")")
-                    .foregroundStyle(.gray)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.5)
-                    .truncationMode(.middle)
-                    .fixedSize(horizontal: false, vertical: true)
+                Group {
+                    if (vm.localModel.isAvailable) {
+                        Text("Apple Intelligence")
+                    } else {
+                        Text(vm.model.isEmpty ? "None" : "\(vm.model): \(vm.curLLMProfile?.type ?? "Native")")
+                    }
+                }
+                .foregroundStyle(.gray)
+                .lineLimit(2)
+                .minimumScaleFactor(0.5)
+                .truncationMode(.middle)
+                .fixedSize(horizontal: false, vertical: true)
                 
                 Spacer()
                 

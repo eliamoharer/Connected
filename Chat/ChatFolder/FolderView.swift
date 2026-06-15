@@ -253,6 +253,7 @@ struct FolderView: View {
             .toolbar {
                 ToolbarItem(placement: .bottomBar) {
                     Button("New Chat", systemImage: "square.and.pencil") {
+                        guard !vm.messages.isEmpty else { return }
                         let newChat = SavedChat(messages: vm.messages)
                         vm.savedChats.append(newChat)
                         vm.messages = []

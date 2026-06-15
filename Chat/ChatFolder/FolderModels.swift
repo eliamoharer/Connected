@@ -93,6 +93,7 @@ struct FolderButtonView: View {
                     }
                     .padding()
                     .overlay(.black.opacity(0.3), in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
+                    .animation(.smooth, value: parameterArray.map(\.isEnabled))
                     
                     HStack(alignment: .center) {
                         Toggle(!showAdvanced ? "Show Advanced Options" : "Hide Advanced Options", isOn: $showAdvanced)
@@ -173,6 +174,7 @@ struct ParamSlider: View {
                         .frame(width: 60, alignment: .center)
                 }
             }
+            .animation(.smooth, value: param.isEnabled)
         }
     }
 }

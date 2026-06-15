@@ -10,7 +10,6 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var vm = ChatViewModel()
     @StateObject private var fvm = FolderViewModel()
-    //@State private var position = ScrollPosition(idType: Message.ID.self)
     
     @FocusState private var chatFocus: Bool
     
@@ -28,13 +27,11 @@ struct ContentView: View {
                         ScrollView {
                             LazyVStack() {
                                 ForEach(vm.messages) {
-                                    currentMessage in ChatBubble(message: currentMessage, vm: vm)
+                                    currentMessage in ChatBubble(message: currentMessage, vm: vm, isEditing: vm.editingMessageID == currentMessage.id, isLast: ((vm.messages.last?.id == currentMessage.id) && !vm.model.isEmpty))
                                 }
                             }
-                            //.scrollTargetLayout()
-                            .animation(.bouncy, value: vm.messages.count)
+                            //.animation(.bouncy, value: vm.messages.count)
                         }
-                        //.scrollPosition($position)
                         .ignoresSafeArea(edges: .top)
                         .defaultScrollAnchor(.bottom, for: .sizeChanges)
                         .contentMargins(.top, 90, for: .scrollContent)
@@ -63,6 +60,11 @@ struct ContentView: View {
                                         .font(.largeTitle)
                                         .bold()
                                         .italic()
+                                    Text("swipe right")
+                                        .foregroundStyle(Color("AIText"))
+                                        .font(.caption)
+                                        .italic()
+                                        .opacity(0.5)
                                     Spacer()
                                 }
                                 .font(.system(size: 17, design: .serif))
