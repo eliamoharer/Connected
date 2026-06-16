@@ -41,6 +41,7 @@ class FolderViewModel: ObservableObject {
     func FolderGesture(drawerWidth: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 5)
             .onChanged { [self] value in
+                if !isDragging && !isFolderOpen && value.startLocation.x > 80 { return }
                 guard abs(value.translation.height) < tan(threshold) * abs(value.translation.width) || isDragging else { return }
                 
                 isDragging = true

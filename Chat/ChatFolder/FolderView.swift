@@ -102,7 +102,6 @@ struct FolderView: View {
                                     .foregroundStyle(.primary.opacity(0.5))
                             }
                             .accessibilityLabel(Text("Add Profile"))
-                            .disabled(vm.model.isEmpty)
                             
                             Text(" ")
                                 .font(.caption)

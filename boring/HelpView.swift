@@ -60,7 +60,7 @@ struct HelpView: View {
                     DisclosureGroup {
                         Text("If you are using Apple Intelligence, you will not have access to custom profiles or personal instructions. This is a compatibility issue.")
                     } label: {
-                        Text("Personal instructions and profiles greyed out?")
+                        Text("Personal instructions greyed out?")
                     }
                 }
                 

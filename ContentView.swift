@@ -82,23 +82,12 @@ struct ContentView: View {
                     
                     FolderView(vm: vm, fvm: fvm)
                         .offset(x: fvm.drawerPosition ?? -drawerWidth)
-                        .gesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+                        .highPriorityGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
                         .allowsHitTesting(fvm.isFolderOpen)
                     //.ignoresSafeArea()
-                    
-                    if !fvm.isFolderOpen {
-                        HStack {
-                            Color.clear
-                                .frame(width: 100)
-                                .contentShape(.rect)
-                                .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
-                            Spacer()
-                        }
-                        .ignoresSafeArea()
-                    }
                 }
                 .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
-                //.simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+                .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
                 .onGeometryChange(for: CGFloat.self) { proxy in
                     proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing
                 } action: { fullWidth in

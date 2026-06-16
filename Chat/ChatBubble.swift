@@ -80,18 +80,21 @@ private struct StreamingMessageView: View {
     var body: some View {
         VStack(alignment: .leading) {
             if stream.showThinking != nil {
-                Button(action: {
-                    withAnimation(.snappy) {
-                        stream.showThinking = stream.showThinking != true
+                HStack {
+                    Button(action: {
+                        withAnimation(.snappy) {
+                            stream.showThinking = stream.showThinking != true
+                        }
+                    }) {
+                        Text(stream.showThinking == true ? "Close Thinking" : "Show Thinking")
                     }
-                }) {
-                    Text(stream.showThinking == true ? "Close Thinking" : "Show Thinking")
+                    .padding(10)
+                    .glassEffect()
+                    .padding(.horizontal, 14)
+                    .foregroundStyle(Color.gray)
+                    
+                    Spacer()
                 }
-                .padding(10)
-                .glassEffect()
-                .padding(.horizontal, 14)
-                .foregroundStyle(Color.gray)
-                
                 if stream.showThinking == true {
                     ThinkingText(stream: stream)
                         .transition(.blurReplace)
