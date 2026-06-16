@@ -20,8 +20,8 @@
       "internalID" : "22F749AB",
       "localizations" : [
         {
-          "description" : "",
-          "displayName" : "",
+          "description" : "Permanently access custom endpoint entry.",
+          "displayName" : "Custom Endpoint Unlock",
           "locale" : "en_US"
         }
       ],

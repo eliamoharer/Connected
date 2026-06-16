@@ -81,7 +81,7 @@ class ChatViewModel: ObservableObject {
         }
     }
     
-    @Published var isTailscaleUnlocked: Bool = false
+    @Published var isCustomUnlocked: Bool = false
     
     init() {
         loadHistoryFromUserDefaults()
@@ -120,13 +120,13 @@ class ChatViewModel: ObservableObject {
         Task {
             for await result in StoreKit.Transaction.currentEntitlements(for: "eliamoharer.connect.customunlocked") {
                 if case .verified(let transaction) = result {
-                    self.isTailscaleUnlocked = transaction.revocationDate == nil
+                    self.isCustomUnlocked = transaction.revocationDate == nil
                 }
             }
             
             for await result in StoreKit.Transaction.updates {
                 if case .verified(let transaction) = result {
-                    self.isTailscaleUnlocked = transaction.revocationDate == nil
+                    self.isCustomUnlocked = transaction.revocationDate == nil
                 }
             }
         }
@@ -199,10 +199,7 @@ class ChatViewModel: ObservableObject {
         
         let response = Message(text: "", isUser: false, stream: stream)
         
-        withAnimation(.bouncy()) {
-            messages.append(response)
-        }
-        
+        messages.append(response)
         
         let conversation = Array(messages.dropLast())
         let responseID = response.id
@@ -286,9 +283,7 @@ class ChatViewModel: ObservableObject {
         let stream = ChatStream()
         let response = Message(text: "", isUser: false, stream: stream)
         
-        withAnimation(.bouncy()) {
-            messages.append(response)
-        }
+        messages.append(response)
         
         
         let conversation = Array(messages.dropLast())

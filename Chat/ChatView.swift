@@ -34,8 +34,10 @@ struct ChatView: View {
                                         .padding(4)
                                         .frame(width: 44, height: 44)
                                         .contentShape(.rect)
+                                        .accessibilityLabel("Selected image \(image + 1)")
                                 }
                                 .padding(-8)
+                                .accessibilityLabel("Remove image")
                             }
                             .scrollTransition { content, phase in content.opacity(phase.isIdentity ? 1.0 : 0.7) }
                         }
@@ -52,9 +54,10 @@ struct ChatView: View {
                     .lineLimit(1...5)
                     .foregroundStyle(Color("AIText"))
                     .id(textID)
+                    .accessibilityLabel("Message input")
+                    .accessibilityHint("Type a message to send")
                 if !vm.isResponding {
                     Button(action: {
-                        print("Sent: \(vm.prompt)")
                         sendTapped.toggle()
                         if vm.localModel.isAvailable && vm.model.isEmpty {
                             Task {
@@ -80,6 +83,8 @@ struct ChatView: View {
                         .contentShape(.rect)
                     }
                     .padding(-12)
+                    .accessibilityLabel("Send message")
+                    .accessibilityHint("Sends the current message to the AI")
                 } else {
                     Button(action: {
                         sendTapped.toggle()
@@ -95,6 +100,8 @@ struct ChatView: View {
                         .background(.red, in: .rect(cornerRadius: 8))
                         .padding(.horizontal, -2)
                     }
+                    .accessibilityLabel("Stop response")
+                    .accessibilityHint("Stops the AI from generating a response")
                 }
             }
             .padding(.horizontal, 24)
@@ -118,6 +125,7 @@ struct ChatView: View {
                     
                 }
                 .padding(-12)
+                .accessibilityLabel("Add photos")
                 .onChange(of: pics) { _, newPics in
                     guard !newPics.isEmpty else { return }
                     Task {

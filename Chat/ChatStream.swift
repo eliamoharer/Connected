@@ -7,6 +7,7 @@
 
 import Foundation
 internal import Combine
+import SwiftStreamingMarkdown
 
 enum StreamState {
     case idle
@@ -77,5 +78,14 @@ class ChatStream: ObservableObject {
     
     deinit {
         displayUpdateTimer?.invalidate()
+    }
+}
+
+extension ChatStream: StreamedMarkdownSource {
+    var text: AsyncStream<String> {
+        AsyncStream { continuation in
+            let cancellable = $visibleMarkdown.sink { continuation.yield($0) }
+            continuation.onTermination = { _ in cancellable.cancel() }
+        }
     }
 }

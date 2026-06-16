@@ -10,15 +10,13 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var vm = ChatViewModel()
     @StateObject private var fvm = FolderViewModel()
-    
-    @FocusState private var chatFocus: Bool
-    
+        
     @AppStorage("validToS") private var validToS = false
+    
+    @State private var drawerWidth: CGFloat = UIScreen.main.bounds.width
     
     var body: some View {
         if validToS {
-            let drawerWidth = UIScreen.main.bounds.width
-                
                 ZStack(alignment: .leading) {
                     Color("BackgroundColor")
                         .ignoresSafeArea()
@@ -74,7 +72,6 @@ struct ContentView: View {
                         
                         .safeAreaInset(edge: .bottom) {
                             ChatView(vm: vm)
-                                .focused($chatFocus)
                                 .opacity(fvm.isFolderOpen ? 0 : 1)
                             //.animation(.snappy, value: vm.prompt)
                         }
@@ -85,11 +82,31 @@ struct ContentView: View {
                     
                     FolderView(vm: vm, fvm: fvm)
                         .offset(x: fvm.drawerPosition ?? -drawerWidth)
+                        .gesture(fvm.FolderGesture(drawerWidth: drawerWidth))
                         .allowsHitTesting(fvm.isFolderOpen)
                     //.ignoresSafeArea()
+                    
+                    if !fvm.isFolderOpen {
+                        HStack {
+                            Color.clear
+                                .frame(width: 100)
+                                .contentShape(.rect)
+                                .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+                            Spacer()
+                        }
+                        .ignoresSafeArea()
+                    }
                 }
                 .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
-                .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+                //.simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing
+                } action: { fullWidth in
+                    drawerWidth = fullWidth
+                    if !fvm.isDragging {
+                        fvm.drawerPosition = fvm.isFolderOpen ? 0 : -fullWidth
+                    }
+                }
             
         }  else {
             ToSView()

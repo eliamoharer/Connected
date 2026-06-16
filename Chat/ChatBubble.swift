@@ -5,6 +5,7 @@
 //  Created by Elia Moharer on 2026-05-15.
 //
 import SwiftUI
+import SwiftStreamingMarkdown
 
 struct ChatBubble: View {
     let message: Message
@@ -54,6 +55,7 @@ struct ChatBubble: View {
                 HistoryMessageView(message: message, vm: vm, isLast: isLast)
             }
         }
+        .padding(.vertical, 8)
     }
 }
 
@@ -96,10 +98,8 @@ private struct StreamingMessageView: View {
                 }
             }
             
-            StreamingMarkdownWebView(markdown: stream.visibleMarkdown, height: $stream.streamHeight)
-                .frame(minHeight: stream.streamHeight)
+            StreamedMarkdownView(source: stream)
                 .padding(.horizontal, 24)
-                .animation(.none, value: stream.showThinking)
             
             if stream.curState == .idle && !stream.visibleMarkdown.isEmpty {
                 MessageActions(text: stream.visibleMarkdown, showRetry: isLast, onEdit: {
@@ -111,7 +111,7 @@ private struct StreamingMessageView: View {
                 })
             }
         }
-        .fixedSize(horizontal: false, vertical: true)
+        //.fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -119,13 +119,10 @@ private struct HistoryMessageView: View {
     let message: Message
     let vm: ChatViewModel
     let isLast: Bool
-    
-    @State private var height: CGFloat = 10
-    
+        
     var body: some View {
         VStack(alignment: .leading) {
-            StreamingMarkdownWebView(markdown: message.text, height: $height)
-                .frame(minHeight: height)
+            MarkdownView(text: message.text)
                 .padding(.horizontal, 24)
             
             if !message.text.isEmpty {
@@ -138,7 +135,7 @@ private struct HistoryMessageView: View {
                 })
             }
         }
-        .fixedSize(horizontal: false, vertical: true)
+        //.fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -196,14 +193,14 @@ private struct MessageActions: View {
         }
         .foregroundStyle(Color("AIText"))
         .padding(.horizontal, 24)
-        .padding(.top, -10)
-        .alert("Are you sure you want to report this message?", isPresented: $showReport) {
+        .padding(.vertical, 8)
+        .alert("Hide this message?", isPresented: $showReport) {
             Button("Cancel", role: .cancel) { }
-            Button("Report & Hide", role: .destructive) {
+            Button("Hide", role: .destructive) {
                 onReport()
             }
         } message: {
-            Text("This will hide it from your view and permanently delete the message from your device.")
+            Text("This removes and hides the message from your chat on this device.")
         }
     }
 }

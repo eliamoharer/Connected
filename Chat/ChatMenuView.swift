@@ -69,13 +69,13 @@ struct ChatMenuView: View {
             }
             
             Button {
-                if vm.isTailscaleUnlocked {
+                if vm.isCustomUnlocked {
                     showPrompt = true
                 } else {
                     showPaywall = true
                 }
             } label: {
-                Text(vm.isTailscaleUnlocked ? "Tailscale" : "Tailscale ($0.99)")
+                Text(vm.isCustomUnlocked ? "Custom Endpoint" : "Custom Endpoint ($0.99)")
                 
                 if !vm.endpoint.isEmpty && vm.isTail {
                     Text("@ \(vm.endpoint)")
@@ -88,7 +88,7 @@ struct ChatMenuView: View {
                 .contentShape(.rect)
         }
         .padding(-12)
-        .alert("Use Tailscale", isPresented: $showPrompt) {
+        .alert("Use Custom", isPresented: $showPrompt) {
             TextField("IP:Port", text: $tailEndpoint)
                 .keyboardType(.numbersAndPunctuation)
                 .autocapitalization(.none)
@@ -110,7 +110,7 @@ struct ChatMenuView: View {
                 }
             }
         } message: {
-            Text("Enter your Tailscale IP and desired port")
+            Text("Enter your custom IP and desired port")
         }
         .alert("Authentication Key", isPresented: $showKey) {
             TextField("Auth Key", text: $APIKey)
@@ -129,7 +129,7 @@ struct ChatMenuView: View {
                     .font(.largeTitle.bold())
                     .padding(.top, 30)
                 
-                Text("Unlock Tailscale networking to safely tunnel to your remote LLM instances.")
+                Text("Unlock to set a custom endpoint.")
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
                     .padding(.bottom)

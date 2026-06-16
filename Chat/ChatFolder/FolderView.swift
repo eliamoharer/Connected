@@ -101,6 +101,8 @@ struct FolderView: View {
                                     .overlay(.primary.opacity(0.5), in: .rect(cornerRadius: 12).stroke(lineWidth: 1))
                                     .foregroundStyle(.primary.opacity(0.5))
                             }
+                            .accessibilityLabel(Text("Add Profile"))
+                            .disabled(vm.model.isEmpty)
                             
                             Text(" ")
                                 .font(.caption)
@@ -111,6 +113,7 @@ struct FolderView: View {
                         Text("Personal Instructions")
                         Text("Customize how the model responds")
                     }
+                    .disabled(vm.model.isEmpty)
                     VStack {
                         TextEditor(text: $vm.systemPrompt)
                             .scrollContentBackground(.hidden)
@@ -119,7 +122,6 @@ struct FolderView: View {
                             .clipShape(.rect(cornerRadius: 12))
                             .frame(minHeight: 100)
                             .focused($editorFocus)
-                            //.padding(.bottom, !editorFocus ? 0 : 16)
                         
                         if editorFocus {
                             HStack(spacing: -8) {
