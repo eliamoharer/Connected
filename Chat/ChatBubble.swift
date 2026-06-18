@@ -7,6 +7,41 @@
 import SwiftUI
 import SwiftStreamingMarkdown
 
+// ai generated
+private let markdownConfig: MarkdownRenderConfig = {
+    let text = UIColor(named: "AIText") ?? .label
+    let surface = UIColor(named: "UserBG") ?? .secondarySystemBackground
+    let d = MarkdownRenderConfig.default
+
+    return d
+        .withParagraphStyle(value: .init(textFonts: d.paragraphStyle.textFonts, textColor: text))
+        .withHeadingStyle(value: .init(
+            h1Font: d.headingStyle.h1Font, h2Font: d.headingStyle.h2Font,
+            h3Font: d.headingStyle.h3Font, h4Font: d.headingStyle.h4Font,
+            h5Font: d.headingStyle.h5Font, h6Font: d.headingStyle.h6Font,
+            textColor: text
+        ))
+        .withBlockQuoteStyle(value: .init(textFonts: d.blockQuoteStyle.textFonts, textColor: text))
+        .withOrderedListStyle(value: .init(textFonts: d.orderedListStyle.textFonts, textColor: text))
+        .withTableStyle(value: .init(
+            textFonts: d.tableStyle.textFonts,
+            headerTextColor: text,
+            regularTextColor: text,
+            headerBackgroundColor: surface.withAlphaComponent(0.15),
+            borderColor: surface.withAlphaComponent(0.3),
+            actionButtonColor: .systemBlue
+        ))
+        .withInlineStyle(value: .init(
+            boldTextColor: text,
+            linkTextFont: d.inlineStyle.linkTextFont,
+            linkTextColor: .systemBlue,
+            codeTextFont: d.inlineStyle.codeTextFont,
+            codeTextColor: text,
+            codeBackgroundColor: surface.withAlphaComponent(0.15),
+            codeUnderlineColor: surface.withAlphaComponent(0.3)
+        ))
+}()
+
 struct ChatBubble: View {
     let message: Message
     let vm: ChatViewModel
@@ -101,7 +136,7 @@ private struct StreamingMessageView: View {
                 }
             }
             
-            StreamedMarkdownView(source: stream)
+            StreamedMarkdownView(source: stream, config: markdownConfig)
                 .padding(.horizontal, 24)
             
             if stream.curState == .idle && !stream.visibleMarkdown.isEmpty {
@@ -125,7 +160,7 @@ private struct HistoryMessageView: View {
         
     var body: some View {
         VStack(alignment: .leading) {
-            MarkdownView(text: message.text)
+            MarkdownView(text: message.text, config: markdownConfig)
                 .padding(.horizontal, 24)
             
             if !message.text.isEmpty {
@@ -180,7 +215,7 @@ private struct MessageActions: View {
                     .contentShape(.rect)
             }
             .padding(-12)
-            .padding(.top, -4)
+            .offset(y: -3)
             
             if showRetry {
                 Button(action: {
@@ -191,7 +226,7 @@ private struct MessageActions: View {
                         .contentShape(.rect)
                 }
                 .padding(-12)
-                .padding(.top, -3)
+                .offset(y: -3)
             }
         }
         .foregroundStyle(Color("AIText"))
