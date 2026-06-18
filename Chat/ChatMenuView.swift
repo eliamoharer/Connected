@@ -125,7 +125,7 @@ struct ChatMenuView: View {
         }
         .sheet(isPresented: $showPaywall) {
             VStack {
-                Text("Connected Premium")
+                Text("Custom Endpoints")
                     .font(.largeTitle.bold())
                     .padding(.top, 30)
                 
