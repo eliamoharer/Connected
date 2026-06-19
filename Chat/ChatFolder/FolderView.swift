@@ -156,6 +156,12 @@ struct FolderView: View {
                         }
                     }
                     .animation(.bouncy, value: editorFocus)
+                    .onChange(of: editorFocus) {
+                        if fvm.isDragging || !fvm.isFolderOpen {
+                            editorFocus = false
+                        }
+                    }
+                    
                     Divider()
                 }
                 

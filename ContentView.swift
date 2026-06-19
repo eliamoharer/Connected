@@ -123,8 +123,8 @@ struct ContentView: View {
                 
                 FolderView(vm: vm, fvm: fvm)
                     .offset(x: fvm.drawerPosition ?? -drawerWidth)
-                    .highPriorityGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
-                    .allowsHitTesting(fvm.isFolderOpen)
+                    //.highPriorityGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+                    //.allowsHitTesting(fvm.isFolderOpen)
                 //.ignoresSafeArea()
             }
             .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
