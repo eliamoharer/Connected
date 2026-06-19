@@ -112,7 +112,6 @@ struct FolderView: View {
                         Text("Personal Instructions")
                         Text("Customize how the model responds")
                     }
-                    .disabled(vm.model.isEmpty)
                     VStack {
                         TextEditor(text: $vm.systemPrompt)
                             .scrollContentBackground(.hidden)
@@ -166,6 +165,7 @@ struct FolderView: View {
                             HStack {
                                 Button(chat.title) {
                                     vm.messages = chat.messages
+                                    vm.syncLocal()
                                 }
                                 .padding(.vertical, 2)
                                 
@@ -258,6 +258,9 @@ struct FolderView: View {
                         let newChat = SavedChat(messages: vm.messages)
                         vm.savedChats.append(newChat)
                         vm.messages = []
+                        if vm.isLocal {
+                            vm.resetLocal()
+                        }
                     }
                 }
                 ToolbarSpacer(.flexible, placement: .bottomBar)
