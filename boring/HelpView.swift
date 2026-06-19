@@ -36,6 +36,16 @@ struct HelpView: View {
                             Image(systemName: "arrowshape.down.fill")
                         }
                     }
+                    
+                    DisclosureGroup {
+                        Text("I personally use the Tailscale VPN. Setup is very easy, you install the VPN on your home device and phone, and it will serve as a long distance connection when you're not at home.\n\nThis feature is $0.99, under 'Custom Endpoints' in the menu.")
+                    } label: {
+                        Label {
+                            Text("How to use remotely?")
+                        } icon: {
+                            Image(systemName: "network")
+                        }
+                    }
                 }
                 
                 Section(header: Text("Troubleshooting")) {
@@ -58,9 +68,9 @@ struct HelpView: View {
                     }
                     
                     DisclosureGroup {
-                        Text("If you are using Apple Intelligence, you will not have access to custom profiles or personal instructions. This is a compatibility issue.")
+                        Text("If you are using Apple Intelligence, you will not have access to custom profiles. This is a compatibility issue.")
                     } label: {
-                        Text("Personal instructions greyed out?")
+                        Text("Profiles not working?")
                     }
                 }
                 
