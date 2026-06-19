@@ -47,9 +47,7 @@ struct ToSView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
                 Button {
-                    withAnimation(.bouncy) {
-                        validToS = true
-                    }
+                    validToS = true
                 } label: {
                     Text("Accept and Continue")
                         .foregroundColor(Color("BackgroundColor"))

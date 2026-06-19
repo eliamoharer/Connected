@@ -140,7 +140,6 @@ struct ContentView: View {
             
         }  else {
             ToSView()
-                .transition(.blurReplace)
         }
     }
 }
