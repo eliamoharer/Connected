@@ -14,6 +14,7 @@ struct ChatView: View {
     @State private var sendTapped = false
     @State private var pics: [PhotosPickerItem] = []
     @State private var textID = UUID()
+    @FocusState private var chatFocus: Bool
     
     var body: some View {
         VStack(spacing: 12) {
@@ -53,22 +54,16 @@ struct ChatView: View {
                 TextField("Type...",  text: $vm.prompt, axis: .vertical)
                     .lineLimit(1...5)
                     .foregroundStyle(Color("AIText"))
-                    .id(textID)
+                    //.id(textID)
+                    .focused($chatFocus)
                     .accessibilityLabel("Message input")
                     .accessibilityHint("Type a message to send")
                 if !vm.isResponding {
                     Button(action: {
                         sendTapped.toggle()
-                        if vm.localModel.isAvailable && vm.model.isEmpty {
-                            Task {
-                                await vm.sendLocalMessage()
-                            }
-                        } else if !vm.model.isEmpty {
-                            vm.sendMessage()
-                        } else {
-                            vm.messages.append(Message(text: "No model available.", isUser: false))
-                        }
-                        textID = UUID()
+                        vm.sendMessage()
+                        chatFocus = false
+                        //textID = UUID()
                     }) {
                         HStack {
                             Image(systemName: "arrow.up")
