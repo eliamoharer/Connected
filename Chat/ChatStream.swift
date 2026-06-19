@@ -76,6 +76,15 @@ class ChatStream: ObservableObject {
         RunLoop.main.add(displayUpdateTimer!, forMode: .common)
     }
     
+    func updateLocal(text: String) {
+        guard text != accumulatedResponse else { return }
+        if curState != .responding {
+            curState = .responding
+        }
+        accumulatedResponse = text
+        pendingResponseUpdate = true
+    }
+    
     deinit {
         displayUpdateTimer?.invalidate()
     }

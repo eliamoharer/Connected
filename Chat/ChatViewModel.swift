@@ -425,8 +425,7 @@ class ChatViewModel: ObservableObject {
         do {
             for try await snapshot in localSession.streamResponse(to: Prompt(userText)) {
                 try Task.checkCancellation()
-                let delta = snapshot.content.dropFirst(stream.fullResponse.count)
-                if !delta.isEmpty { stream.appendToken(String(delta), isReasoning: false) }
+                stream.updateLocal(text: String(snapshot.content))
             }
             stream.finish()
             messages[responseIndex].text = stream.fullResponse
