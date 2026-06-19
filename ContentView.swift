@@ -30,7 +30,7 @@ struct ContentView: View {
                                     ChatBubble(message: currentMessage,
                                                vm: vm,
                                                isEditing: vm.editingMessageID == currentMessage.id,
-                                               isLast: ((vm.messages.last?.id == currentMessage.id) && !vm.model.isEmpty))
+                                               isLast: vm.messages.last?.id == currentMessage.id)
                                     .id(currentMessage.id)
                                 }
                             }
@@ -44,7 +44,7 @@ struct ContentView: View {
                         .scrollDismissesKeyboard(.immediately)
                         .onChange(of: vm.messages.count) {
                             if let lastMessageID = vm.messages.last?.id {
-                                withAnimation(.snappy) {
+                                withAnimation(.smooth) {
                                     proxy.scrollTo(lastMessageID, anchor: .bottom)
                                 }
                             }
@@ -82,18 +82,22 @@ struct ContentView: View {
                                             content.offset(x: xOffset)
                                         } keyframes: { _ in
                                             KeyframeTrack {
-                                                // 1. Rest at the center
+                                                let tempWidth = -drawerWidth/2
                                                 LinearKeyframe(0, duration: 0.5)
                                                 
                                                 CubicKeyframe(-drawerWidth/2 + 40, duration: 0.4)
-                                                LinearKeyframe(-drawerWidth/2 + 40, duration: 0.1)
+                                                LinearKeyframe(-drawerWidth/2 + 40, duration: 0.5)
                                                 
-                                                CubicKeyframe(-drawerWidth/2 + 65, duration: 0.5)
-                                                CubicKeyframe(-drawerWidth/2 + 55, duration: 0.3)
-                                                CubicKeyframe(-drawerWidth/2 + 85, duration: 0.5)
-                                                CubicKeyframe(-drawerWidth/2 + 75, duration: 0.3)
+//                                                CubicKeyframe(-drawerWidth/2 + 65, duration: 0.5)
+//                                                CubicKeyframe(-drawerWidth/2 + 55, duration: 0.3)
+//                                                CubicKeyframe(-drawerWidth/2 + 85, duration: 0.5)
+//                                                CubicKeyframe(-drawerWidth/2 + 75, duration: 0.3)
                                                 
-                                                CubicKeyframe(-drawerWidth/2 + 100, duration: 0.8, endVelocity: 0)
+                                                //CubicKeyframe(-drawerWidth/2 + 100, duration: 0.8, endVelocity: 0)
+                                                
+                                                CubicKeyframe(tempWidth + 80, duration: 1.2, endVelocity: 0)
+                                                CubicKeyframe(tempWidth + 90, duration: 0.3, endVelocity: 0)
+                                                CubicKeyframe(tempWidth + 100, duration: 0.9, endVelocity: 0)
                                                 
                                                 SpringKeyframe(0, duration: 0.7, spring: .bouncy)
                                             }
