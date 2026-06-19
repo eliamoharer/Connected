@@ -17,6 +17,7 @@ class ChatViewModel: ObservableObject {
     @Published var localModel = SystemLanguageModel.default
     
     private var localSession = LanguageModelSession()
+    private var localSessionSysPrompt = ""
     
     private var activeTask: Task<Void, Never>?
     
@@ -29,6 +30,10 @@ class ChatViewModel: ObservableObject {
     private let systemPromptIsEnabledKey = "lastSystemPromptIsEnabled"
     private let APIKeyKey = "lastSelectedAPIKey"
     
+    var isLocal: Bool {
+        localModel.isAvailable && model.isEmpty
+    }
+    
     @Published var systemPrompt: String = "" {
         didSet {
             UserDefaults.standard.set(systemPrompt, forKey: systemPromptKey)
@@ -37,6 +42,9 @@ class ChatViewModel: ObservableObject {
     @Published var sysPromptIsEnabled: Bool = false {
         didSet {
             UserDefaults.standard.set(sysPromptIsEnabled, forKey: systemPromptIsEnabledKey)
+            if isLocal {
+                localSession = makeLocal(from: messages)
+            }
         }
     }
     
@@ -175,7 +183,9 @@ class ChatViewModel: ObservableObject {
     }
     
     func sendMessage() {
-        guard !prompt.isEmpty || !selectedImages.isEmpty else {
+        guard !prompt.isEmpty || !selectedImages.isEmpty else { return }
+        guard isLocal || !model.isEmpty else {
+            messages.append(Message(text: "No model available", isUser: false))
             return
         }
         
@@ -192,14 +202,25 @@ class ChatViewModel: ObservableObject {
         prompt = ""
         selectedImages.removeAll()
         
-        let userMessage = Message(text: userText, isUser: true, images: userImages)
+        if isLocal {
+            let sys = sysPromptIsEnabled ? systemPrompt : ""
+            if sys != localSessionSysPrompt {
+                localSession = makeLocal(from: messages)
+            }
+        }
+        
         let stream = ChatStream()
         
-        messages.append(userMessage)
+        messages.append(Message(text: userText, isUser: true, images: userImages))
         
         let response = Message(text: "", isUser: false, stream: stream)
         
         messages.append(response)
+        
+        if isLocal {
+            activeTask = Task { await runLocal(userText, stream: stream, responseIndex: messages.count - 1) }
+            return
+        }
         
         let conversation = Array(messages.dropLast())
         let responseID = response.id
@@ -285,6 +306,16 @@ class ChatViewModel: ObservableObject {
         
         messages.append(response)
         
+        if isLocal {
+            guard let lastUserIndex = messages.lastIndex(where: { $0.isUser && $0.stream == nil }) else {
+                isResponding = false
+                return
+            }
+            let userText = messages[lastUserIndex].text
+            localSession = makeLocal(from: Array(messages[..<lastUserIndex].filter { $0.stream == nil }))
+            activeTask = Task { await runLocal(userText, stream: stream, responseIndex: messages.count - 1) }
+            return
+        }
         
         let conversation = Array(messages.dropLast())
         let responseID = response.id
@@ -323,23 +354,12 @@ class ChatViewModel: ObservableObject {
         }
     }
     
-    func sendLocalMessage() async {
-        do {
-            messages.append(Message(text: prompt, isUser: true, images: selectedImages))
-            let userText = prompt
-            prompt = ""
-            let response = try await localSession.respond(to: userText)
-            
-            await MainActor.run {
-                messages.append(Message(text: response.content, isUser: false))
-            }
-        } catch {
-            messages.append(Message(text: error.localizedDescription, isUser: false))
-        }
-    }
-    
     func report(message: Message) {
         messages.removeAll { $0.id == message.id }
+        
+        if isLocal {
+            localSession = makeLocal(from: messages)
+        }
     }
     
     func edit(text: String, editmessage: Message) {
@@ -348,10 +368,71 @@ class ChatViewModel: ObservableObject {
             messages[index].stream = nil
         }
         editingMessageID = nil
+        
+        if isLocal {
+            localSession = makeLocal(from: messages)
+        }
     }
     
     func abort() {
         activeTask?.cancel()
         isResponding = false
+    }
+    
+    func resetLocal() {
+        localSessionSysPrompt = sysPromptIsEnabled ? systemPrompt : ""
+        if sysPromptIsEnabled && !systemPrompt.isEmpty {
+            localSession = LanguageModelSession(instructions: systemPrompt)
+        } else {
+            localSession = LanguageModelSession()
+        }
+    }
+    
+    func syncLocal() {
+        guard isLocal else { return }
+        localSession = makeLocal(from: messages)
+    }
+    
+    private func makeLocal(from messages: [Message]) -> LanguageModelSession {
+        var entries: [Transcript.Entry] = []
+        
+        if sysPromptIsEnabled, !systemPrompt.isEmpty {
+            entries.append(.instructions(Transcript.Instructions(segments: [.text(Transcript.TextSegment(content: systemPrompt))], toolDefinitions: [])))
+        }
+        
+        for message in messages where message.stream == nil {
+            if message.isUser, !message.text.isEmpty {
+                entries.append(.prompt(Transcript.Prompt(segments: [.text(Transcript.TextSegment(content: message.text))])))
+            } else if !message.isUser, !message.text.isEmpty {
+                entries.append(.response(Transcript.Response(assetIDs: [], segments: [.text(Transcript.TextSegment(content: message.text))])))
+            }
+        }
+        
+        localSessionSysPrompt = sysPromptIsEnabled ? systemPrompt : ""
+        
+        if entries.isEmpty {
+            if sysPromptIsEnabled, !systemPrompt.isEmpty {
+                return LanguageModelSession(instructions: systemPrompt)
+            }
+            return LanguageModelSession()
+        }
+        
+        return LanguageModelSession(transcript: Transcript(entries: entries))
+    }
+    
+    private func runLocal(_ userText: String, stream: ChatStream, responseIndex: Int) async {
+        defer { if !Task.isCancelled { isResponding = false } }
+        do {
+            for try await snapshot in localSession.streamResponse(to: Prompt(userText)) {
+                try Task.checkCancellation()
+                let delta = snapshot.content.dropFirst(stream.fullResponse.count)
+                if !delta.isEmpty { stream.appendToken(String(delta), isReasoning: false) }
+            }
+            stream.finish()
+            messages[responseIndex].text = stream.fullResponse
+        } catch is CancellationError {
+        } catch {
+            messages[responseIndex].text = error.localizedDescription
+        }
     }
 }
