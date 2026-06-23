@@ -7,7 +7,6 @@
 
 import SwiftUI
 import PhotosUI
-import FoundationModels
 
 struct ChatView: View {
     @ObservedObject var vm: ChatViewModel
@@ -137,7 +136,7 @@ struct ChatView: View {
                 
                 Spacer()
                 Group {
-                    if (vm.localModel.isAvailable) {
+                    if (vm.isLocal) {
                         Text("Apple Intelligence")
                     } else {
                         Text(vm.model.isEmpty ? "None" : "\(vm.model): \(vm.curLLMProfile?.type ?? "Native")")
