@@ -191,8 +191,16 @@ class ChatViewModel: ObservableObject {
         
         activeTask?.cancel()
         
+        if isLocal {
+            let sys = sysPromptIsEnabled ? systemPrompt : ""
+            if sys != localSessionSysPrompt || messages.last?.stream != nil {
+                localSession = makeLocal(from: messages)
+            }
+        }
+        
         if let previous = messages.indices.last, let previousMessage = messages[previous].stream {
             messages[previous].text = previousMessage.fullResponse
+            messages[previous].stream = nil
         }
         
         isResponding = true
@@ -202,13 +210,6 @@ class ChatViewModel: ObservableObject {
         prompt = ""
         selectedImages.removeAll()
         
-        if isLocal {
-            let sys = sysPromptIsEnabled ? systemPrompt : ""
-            if sys != localSessionSysPrompt {
-                localSession = makeLocal(from: messages)
-            }
-        }
-        
         let stream = ChatStream()
         
         messages.append(Message(text: userText, isUser: true, images: userImages))
@@ -216,14 +217,14 @@ class ChatViewModel: ObservableObject {
         let response = Message(text: "", isUser: false, stream: stream)
         
         messages.append(response)
+        let responseID = response.id
         
         if isLocal {
-            activeTask = Task { await runLocal(userText, stream: stream, responseIndex: messages.count - 1) }
+            activeTask = Task { await runLocal(userText, stream: stream, responseID: responseID) }
             return
         }
         
         let conversation = Array(messages.dropLast())
-        let responseID = response.id
         
         let curModel = model
         let curEndpoint = endpoint
@@ -296,8 +297,16 @@ class ChatViewModel: ObservableObject {
     }
     
     func resendMessage() {
-        messages.removeLast()
         activeTask?.cancel()
+        
+        if let last = messages.last, !last.isUser {
+            messages.removeLast()
+        }
+        
+        guard messages.last?.isUser == true else {
+            isResponding = false
+            return
+        }
         
         isResponding = true
         
@@ -305,6 +314,7 @@ class ChatViewModel: ObservableObject {
         let response = Message(text: "", isUser: false, stream: stream)
         
         messages.append(response)
+        let responseID = response.id
         
         if isLocal {
             guard let lastUserIndex = messages.lastIndex(where: { $0.isUser && $0.stream == nil }) else {
@@ -312,13 +322,12 @@ class ChatViewModel: ObservableObject {
                 return
             }
             let userText = messages[lastUserIndex].text
-            localSession = makeLocal(from: Array(messages[..<lastUserIndex].filter { $0.stream == nil }))
-            activeTask = Task { await runLocal(userText, stream: stream, responseIndex: messages.count - 1) }
+            localSession = makeLocal(from: Array(messages[..<lastUserIndex].filter { $0.stream == nil || !$0.text.isEmpty }))
+            activeTask = Task { await runLocal(userText, stream: stream, responseID: responseID) }
             return
         }
         
         let conversation = Array(messages.dropLast())
-        let responseID = response.id
         
         let curModel = model
         let curEndpoint = endpoint
@@ -376,6 +385,17 @@ class ChatViewModel: ObservableObject {
     
     func abort() {
         activeTask?.cancel()
+        
+        if let last = messages.indices.last, let stream = messages[last].stream {
+            messages[last].text = stream.fullResponse
+            stream.finish()
+            messages[last].stream = nil
+        }
+        
+        if isLocal {
+            localSession = makeLocal(from: messages)
+        }
+        
         isResponding = false
     }
     
@@ -400,7 +420,7 @@ class ChatViewModel: ObservableObject {
             entries.append(.instructions(Transcript.Instructions(segments: [.text(Transcript.TextSegment(content: systemPrompt))], toolDefinitions: [])))
         }
         
-        for message in messages where message.stream == nil {
+        for message in messages where message.stream == nil || !message.text.isEmpty {
             if message.isUser, !message.text.isEmpty {
                 entries.append(.prompt(Transcript.Prompt(segments: [.text(Transcript.TextSegment(content: message.text))])))
             } else if !message.isUser, !message.text.isEmpty {
@@ -420,7 +440,7 @@ class ChatViewModel: ObservableObject {
         return LanguageModelSession(transcript: Transcript(entries: entries))
     }
     
-    private func runLocal(_ userText: String, stream: ChatStream, responseIndex: Int) async {
+    private func runLocal(_ userText: String, stream: ChatStream, responseID: Message.ID) async {
         defer { if !Task.isCancelled { isResponding = false } }
         do {
             for try await snapshot in localSession.streamResponse(to: Prompt(userText)) {
@@ -428,10 +448,25 @@ class ChatViewModel: ObservableObject {
                 stream.updateLocal(text: String(snapshot.content))
             }
             stream.finish()
-            messages[responseIndex].text = stream.fullResponse
+            if let index = messages.firstIndex(where: { $0.id == responseID }) {
+                messages[index].text = stream.fullResponse
+                messages[index].stream = nil
+            }
         } catch is CancellationError {
+            stream.finish()
+            if let index = messages.firstIndex(where: { $0.id == responseID }),
+               messages[index].stream != nil {
+                if !stream.fullResponse.isEmpty {
+                    messages[index].text = stream.fullResponse
+                }
+                messages[index].stream = nil
+            }
         } catch {
-            messages[responseIndex].text = error.localizedDescription
+            stream.finish()
+            if let index = messages.firstIndex(where: { $0.id == responseID }) {
+                messages[index].text = error.localizedDescription
+                messages[index].stream = nil
+            }
         }
     }
 }
