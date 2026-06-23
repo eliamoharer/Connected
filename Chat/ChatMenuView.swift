@@ -7,6 +7,7 @@
 
 import SwiftUI
 import StoreKit
+import FoundationModels
 
 struct ChatMenuView: View {
     @ObservedObject var vm: ChatViewModel
@@ -26,6 +27,12 @@ struct ChatMenuView: View {
                         ForEach(vm.models, id: \.self) { endModel in
                             Text(endModel)
                                 .tag(endModel)
+                        }
+                    }
+                    
+                    if vm.localModel.isAvailable {
+                        Button("Apple Intelligence") {
+                            vm.model = ""
                         }
                     }
                 }
@@ -75,7 +82,7 @@ struct ChatMenuView: View {
                     showPaywall = true
                 }
             } label: {
-                Text(vm.isCustomUnlocked ? "Custom Endpoint" : "Custom Endpoint ($0.99)")
+                Text(vm.isCustomUnlocked ? "Custom Endpoint" : "Unlock Custom Endpoint")
                 
                 if !vm.endpoint.isEmpty && vm.isTail {
                     Text("@ \(vm.endpoint)")
