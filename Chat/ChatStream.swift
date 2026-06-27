@@ -20,7 +20,6 @@ class ChatStream: ObservableObject {
     @Published var visibleMarkdown: String = ""
     @Published var curState: StreamState = .idle
     @Published var showThinking: Bool?
-    @Published var streamHeight: CGFloat = 10
     
     private var accumulatedThinking: String = ""
     private var accumulatedResponse: String = ""

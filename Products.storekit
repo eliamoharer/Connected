@@ -25,7 +25,7 @@
           "locale" : "en_US"
         }
       ],
-      "productID" : "eliamoharer.connect.customunlocked",
+      "productID" : "eliamoharer.connect.customunlock",
       "referenceName" : "Custom Unlock",
       "type" : "NonConsumable"
     }
