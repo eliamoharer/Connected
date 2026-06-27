@@ -134,21 +134,21 @@ struct ChatView: View {
                     }
                 }
                 
-                Spacer()
-                Group {
+                //Spacer()
+                ScrollView(.horizontal, showsIndicators: false) {
                     if (vm.isLocal) {
                         Text("Apple Intelligence")
                     } else {
                         Text(vm.model.isEmpty ? "None" : "\(vm.model): \(vm.curLLMProfile?.type ?? "Native")")
                     }
                 }
+                .defaultScrollAnchor(.center, for: .alignment) 
+                .onTapGesture {
+                    chatFocus = true
+                }
                 .foregroundStyle(.gray)
-                .lineLimit(2)
-                .minimumScaleFactor(0.5)
-                .truncationMode(.middle)
-                .fixedSize(horizontal: false, vertical: true)
                 
-                Spacer()
+                //Spacer()
                 
                 ChatMenuView(vm: vm, scanner: vm.scanner)
                 
