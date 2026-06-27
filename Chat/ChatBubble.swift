@@ -215,7 +215,7 @@ private struct MessageActions: View {
                     .contentShape(.rect)
             }
             .padding(-12)
-            .offset(y: -3)
+            .offset(y: -2)
             
             if showRetry {
                 Button(action: {
@@ -226,7 +226,7 @@ private struct MessageActions: View {
                         .contentShape(.rect)
                 }
                 .padding(-12)
-                .offset(y: -3)
+                .offset(y: -1)
             }
         }
         .foregroundStyle(Color("AIText"))
