@@ -170,6 +170,7 @@ struct FolderView: View {
                         ForEach(filteredChats.reversed()) { chat in
                             HStack {
                                 Button(chat.title) {
+                                    vm.abort()
                                     vm.messages = chat.messages
                                     vm.syncLocal()
                                 }
@@ -261,6 +262,7 @@ struct FolderView: View {
                 ToolbarItem(placement: .bottomBar) {
                     Button("New Chat", systemImage: "square.and.pencil") {
                         guard !vm.messages.isEmpty else { return }
+                        vm.abort()
                         let newChat = SavedChat(messages: vm.messages)
                         vm.savedChats.append(newChat)
                         vm.messages = []
