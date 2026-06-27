@@ -38,7 +38,7 @@ struct HelpView: View {
                     }
                     
                     DisclosureGroup {
-                        Text("I personally use the Tailscale VPN. Setup is very easy, you install the VPN on your home device and phone, and it will serve as a long distance connection when you're not at home.\n\nThis feature is $0.99, under 'Custom Endpoints' in the menu.")
+                        Text("I personally use the Tailscale VPN. Setup is very easy, you install the VPN on your home device and phone, and it will serve as a long distance connection when you're not at home.\n\nThis feature is $0.99 for permanent unlock, and can be found under 'Unlock Custom Endpoint' at the top of the chat menu. Press the brain button (under send button) to access.")
                     } label: {
                         Label {
                             Text("How to use remotely?")
@@ -80,9 +80,7 @@ struct HelpView: View {
                     }
                     
                     Button("Restore Purchases") {
-                        Task {
-                            try? await AppStore.sync()
-                        }
+                        Task { try? await AppStore.sync() }
                     }
                 }
                 

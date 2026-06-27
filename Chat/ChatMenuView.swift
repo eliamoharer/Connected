@@ -141,10 +141,18 @@ struct ChatMenuView: View {
                     .padding(.horizontal)
                     .padding(.bottom)
                 
-                StoreView(ids: ["eliamoharer.connect.customunlocked"])
+                StoreView(ids: ["eliamoharer.connect.customunlock"])
                     .storeButton(.visible, for: .restorePurchases)
+                    .backgroundStyle(.clear)
             }
+            .padding()
             .presentationDetents([.medium, .large])
+        }
+        .onChange(of: vm.isCustomUnlocked) {
+            if vm.isCustomUnlocked && showPaywall {
+                showPaywall = false
+                showPrompt = true
+            }
         }
     }
 }

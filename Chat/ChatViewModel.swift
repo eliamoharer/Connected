@@ -126,15 +126,9 @@ class ChatViewModel: ObservableObject {
         }
         
         Task {
-            for await result in StoreKit.Transaction.currentEntitlements(for: "eliamoharer.connect.customunlocked") {
+            for await result in Transaction.updates {
                 if case .verified(let transaction) = result {
-                    self.isCustomUnlocked = transaction.revocationDate == nil
-                }
-            }
-            
-            for await result in StoreKit.Transaction.updates {
-                if case .verified(let transaction) = result {
-                    self.isCustomUnlocked = transaction.revocationDate == nil
+                    await transaction.finish()
                 }
             }
         }
