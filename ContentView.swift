@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import StoreKit
 
 struct ContentView: View {
     @StateObject private var vm = ChatViewModel()
     @StateObject private var fvm = FolderViewModel()
+    @FocusState private var chatInput
     
     @AppStorage("validToS") private var validToS = false
     
@@ -24,7 +26,7 @@ struct ContentView: View {
                 VStack {
                     ScrollViewReader { proxy in
                         ScrollView {
-                            LazyVStack() {
+                            VStack {
                                 ForEach(vm.messages) {
                                     currentMessage in
                                     ChatBubble(message: currentMessage,
@@ -34,7 +36,6 @@ struct ContentView: View {
                                     .id(currentMessage.id)
                                 }
                             }
-                            .scrollTargetLayout()
                             //.animation(.bouncy, value: vm.messages.count)
                         }
                         .ignoresSafeArea(edges: .top)
@@ -42,13 +43,16 @@ struct ContentView: View {
                         .contentMargins(.top, 90, for: .scrollContent)
                         // interactively was breaking stuff
                         .scrollDismissesKeyboard(.immediately)
-                        .onChange(of: vm.messages.count) {
-                            if let lastMessageID = vm.messages.last?.id {
+                        .onChange(of: vm.messages.count) { _, _ in
+                            guard let id = vm.messages.last?.id else { return }
+                            Task { @MainActor in
+                                await Task.yield()
                                 withAnimation(.smooth) {
-                                    proxy.scrollTo(lastMessageID, anchor: .bottom)
+                                    proxy.scrollTo(id, anchor: .bottom)
                                 }
                             }
                         }
+                        
                         
                         .overlay(alignment: .top) {
                             LinearGradient(
@@ -64,55 +68,10 @@ struct ContentView: View {
                             .allowsHitTesting(false)
                         }
                         
-                        .overlay {
-                            if vm.messages.isEmpty {
-                                VStack {
-                                    Spacer()
-                                    Text("Connected.")
-                                        .foregroundStyle(Color("AIText"))
-                                        .font(.largeTitle)
-                                        .bold()
-                                        .italic()
-                                    Text("swipe right")
-                                        .foregroundStyle(Color("AIText"))
-                                        .font(.caption)
-                                        .italic()
-                                        .opacity(0.5)
-                                        .keyframeAnimator(initialValue: 0.0, repeating: true) { content, xOffset in
-                                            content.offset(x: xOffset)
-                                        } keyframes: { _ in
-                                            KeyframeTrack {
-                                                let tempWidth = -drawerWidth/2
-                                                LinearKeyframe(0, duration: 0.5)
-                                                
-                                                CubicKeyframe(-drawerWidth/2 + 40, duration: 0.4)
-                                                LinearKeyframe(-drawerWidth/2 + 40, duration: 0.5)
-                                                
-//                                                CubicKeyframe(-drawerWidth/2 + 65, duration: 0.5)
-//                                                CubicKeyframe(-drawerWidth/2 + 55, duration: 0.3)
-//                                                CubicKeyframe(-drawerWidth/2 + 85, duration: 0.5)
-//                                                CubicKeyframe(-drawerWidth/2 + 75, duration: 0.3)
-                                                
-                                                //CubicKeyframe(-drawerWidth/2 + 100, duration: 0.8, endVelocity: 0)
-                                                
-                                                CubicKeyframe(tempWidth + 80, duration: 1.2, endVelocity: 0)
-                                                CubicKeyframe(tempWidth + 90, duration: 0.3, endVelocity: 0)
-                                                CubicKeyframe(tempWidth + 100, duration: 0.9, endVelocity: 0)
-                                                
-                                                SpringKeyframe(0, duration: 0.7, spring: .bouncy)
-                                            }
-                                        }
-                                    
-                                    Spacer()
-                                }
-                                .font(.system(size: 17, design: .serif))
-                                .transition(.blurReplace)
-                            }
-                        }
-                        
                         .safeAreaInset(edge: .bottom) {
                             ChatView(vm: vm)
                                 .opacity(fvm.isFolderOpen ? 0 : 1)
+                                .focused($chatInput)
                             //.animation(.snappy, value: vm.prompt)
                         }
                         .ignoresSafeArea(.container, edges: .bottom)
@@ -120,11 +79,48 @@ struct ContentView: View {
                 }
                 .allowsHitTesting(!fvm.isFolderOpen)
                 .ignoresSafeArea(.keyboard, edges: fvm.isFolderOpen ? .bottom : [])
-                
+                .overlay {
+                    if vm.messages.isEmpty {
+                        VStack {
+                            Spacer()
+                            Text("Connected.")
+                                .foregroundStyle(Color("AIText"))
+                                .font(.largeTitle)
+                                .bold()
+                                .italic()
+                            Text("swipe right")
+                                .foregroundStyle(Color("AIText"))
+                                .font(.caption)
+                                .italic()
+                                .opacity(0.5)
+                                .keyframeAnimator(initialValue: 0.0, repeating: true) { content, xOffset in
+                                    content.offset(x: xOffset)
+                                } keyframes: { _ in
+                                    KeyframeTrack {
+                                        let tempWidth = -drawerWidth/2
+                                        LinearKeyframe(0, duration: 3.5)
+                                        
+                                        CubicKeyframe(-drawerWidth/2 + 40, duration: 0.4)
+                                        LinearKeyframe(-drawerWidth/2 + 40, duration: 0.5)
+                                        
+                                        CubicKeyframe(tempWidth + 80, duration: 1.2, endVelocity: 0)
+                                        CubicKeyframe(tempWidth + 90, duration: 0.3, endVelocity: 0)
+                                        CubicKeyframe(tempWidth + 100, duration: 0.9, endVelocity: 0)
+                                        
+                                        SpringKeyframe(0, duration: 0.7, spring: .bouncy)
+                                    }
+                                }
+                            
+                            Spacer()
+                        }
+                        .padding(.bottom, 90)
+                        .font(.system(size: 17, design: .serif))
+                    }
+                }
                 FolderView(vm: vm, fvm: fvm)
                     .offset(x: fvm.drawerPosition ?? -drawerWidth)
-                    //.highPriorityGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
-                    //.allowsHitTesting(fvm.isFolderOpen)
+                //.highPriorityGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
+                //.allowsHitTesting(fvm.isFolderOpen)
                 //.ignoresSafeArea()
             }
             .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
@@ -135,6 +131,14 @@ struct ContentView: View {
                 drawerWidth = fullWidth
                 if !fvm.isDragging {
                     fvm.drawerPosition = fvm.isFolderOpen ? 0 : -fullWidth
+                }
+            }
+            .currentEntitlementTask(for: "eliamoharer.connect.customunlock") { state in
+                if let verification = state.transaction,
+                   case .verified(let transaction) = verification {
+                    vm.isCustomUnlocked = transaction.revocationDate == nil
+                } else {
+                    vm.isCustomUnlocked = false
                 }
             }
             
