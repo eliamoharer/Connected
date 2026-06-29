@@ -133,7 +133,7 @@ struct ContentView: View {
                     fvm.drawerPosition = fvm.isFolderOpen ? 0 : -fullWidth
                 }
             }
-            .currentEntitlementTask(for: "eliamoharer.connect.customunlock") { state in
+            .currentEntitlementTask(for: "eliamoharer.connected.customunlock") { state in
                 if let verification = state.transaction,
                    case .verified(let transaction) = verification {
                     vm.isCustomUnlocked = transaction.revocationDate == nil

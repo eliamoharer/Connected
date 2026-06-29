@@ -141,7 +141,7 @@ struct ChatMenuView: View {
                     .padding(.horizontal)
                     .padding(.bottom)
                 
-                StoreView(ids: ["eliamoharer.connect.customunlock"])
+                StoreView(ids: ["eliamoharer.connected.customunlock"])
                     .storeButton(.visible, for: .restorePurchases)
                     .backgroundStyle(.clear)
             }
