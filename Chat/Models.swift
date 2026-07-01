@@ -13,13 +13,23 @@ struct Message: Identifiable, Codable {
     var text: String = ""
     let isUser: Bool
     
-    var images: [UIImage]?
+    private var imageData: [Data]?
     var stream: ChatStream?
     
+    var images: [UIImage]? {
+        imageData?.compactMap { UIImage(data: $0) }
+    }
+    
+    init(id: UUID = UUID(), text: String = "", isUser: Bool, images: [UIImage]? = nil, stream: ChatStream? = nil) {
+        self.id = id
+        self.text = text
+        self.isUser = isUser
+        self.stream = stream
+        self.imageData = images?.compactMap { $0.jpegData(compressionQuality: 0.7) }
+    }
+    
     enum CodingKeys: String, CodingKey {
-        case id
-        case text
-        case isUser
+        case id, text, isUser, imageData
     }
 }
 
