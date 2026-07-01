@@ -60,7 +60,6 @@ class ChatViewModel: ObservableObject {
     @Published var prompt: String = ""
     @Published var messages: [Message] = []
     @Published var selectedImages: [UIImage] = []
-    @Published var isThinking: Bool = true
     @Published var models: [String] = []
     @Published var curLLMProfile: LLMProfile? {
         didSet {
@@ -190,11 +189,6 @@ class ChatViewModel: ObservableObject {
             if sys != localSessionSysPrompt || messages.last?.stream != nil {
                 localSession = makeLocal(from: messages)
             }
-        }
-        
-        if let previous = messages.indices.last, let previousMessage = messages[previous].stream {
-            messages[previous].text = previousMessage.fullResponse
-            messages[previous].stream = nil
         }
         
         isResponding = true
