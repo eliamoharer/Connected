@@ -75,7 +75,6 @@ func fetchLLMResponse(for messages: [Message],
             
             for try await line in asyncBytes.lines {
                 try Task.checkCancellation()
-                // OpenAI/Standard streaming providers prefix data with "data: "
                 guard line.hasPrefix("data: "), line != "data: [DONE]" else { continue }
                 let jsonString = line.dropFirst(6)
                 
