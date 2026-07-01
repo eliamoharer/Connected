@@ -79,7 +79,7 @@ class FindEndpoints: ObservableObject {
         return nil
     }
     
-    func check(ip: String, port: Int, key: String) async -> (String, Int, [String])? {
+    nonisolated func check(ip: String, port: Int, key: String) async -> (String, Int, [String])? {
         guard let url = URL(string: "http://\(ip):\(port)/v1/models") else { return nil }
         
         var request = URLRequest(url: url)
