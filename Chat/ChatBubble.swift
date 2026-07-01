@@ -14,6 +14,7 @@ private let markdownConfig: MarkdownRenderConfig = {
     let d = MarkdownRenderConfig.default
 
     return d
+        .withShouldAnimateText(value: true)
         .withParagraphStyle(value: .init(textFonts: d.paragraphStyle.textFonts, textColor: text))
         .withHeadingStyle(value: .init(
             h1Font: d.headingStyle.h1Font, h2Font: d.headingStyle.h2Font,
@@ -69,17 +70,18 @@ struct ChatBubble: View {
                     
                     if !message.text.isEmpty {
                         Text(LocalizedStringKey(message.text))
+                            .textSelection(.enabled)
                             .padding(.horizontal, 13)
                             .padding(.vertical, 11)
                             .foregroundStyle(Color("UserText"))
                             .background(Color("UserBG").opacity(0.9), in: .rect(cornerRadius: 24))
-                            .font(.system(size: 17))
-                            .padding(.horizontal, 16)
+                            .font(.body)
                             .contextMenu {
                                 Button("Copy to Clipboard", systemImage: "document.on.document") {
                                     UIPasteboard.general.string = message.text
                                 }
                             }
+                            .padding(.horizontal, 16)
                     }
                 }
             } else if isEditing {
@@ -98,10 +100,11 @@ private struct ThinkingText: View {
     @ObservedObject var stream: ChatStream
     
     var body: some View {
-        Text(LocalizedStringKey(stream.thinkingText))
+        Text(stream.thinkingText)
+            .textSelection(.enabled)
             .padding(.horizontal, 24)
             .foregroundStyle(Color.gray)
-            .font(.system(size: 12))
+            .font(.caption)
     }
 }
 
