@@ -22,7 +22,6 @@ class FolderViewModel: ObservableObject {
     }
     
     @Published var isFolderOpen = false
-    @Published var disableEdit = false
     @Published var drawerPosition: CGFloat?
     var isDragging = false
     let threshold = CGFloat(10) * .pi / 180
