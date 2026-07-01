@@ -68,10 +68,12 @@ struct FolderView: View {
                                 }
                                 .contextMenu {
                                     Button(role: .destructive) {
+                                        let wasSelected = fvm.buttonEnabled == index + 1
                                         fvm.profiles.remove(at: index)
-                                        if fvm.buttonEnabled == index + 1 {
+                                        if wasSelected {
+                                            vm.curLLMProfile = nil
                                             fvm.buttonEnabled = 0
-                                        } else if fvm.buttonEnabled != 0 {
+                                        } else if fvm.buttonEnabled > index + 1 {
                                             fvm.buttonEnabled -= 1
                                         }
                                     } label: {
