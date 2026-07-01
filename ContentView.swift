@@ -36,7 +36,7 @@ struct ContentView: View {
                                     .id(currentMessage.id)
                                 }
                             }
-                            //.animation(.bouncy, value: vm.messages.count)
+                            .animation(.snappy, value: vm.messages.count)
                         }
                         .ignoresSafeArea(edges: .top)
                         .defaultScrollAnchor(.bottom, for: .sizeChanges)
@@ -47,9 +47,16 @@ struct ContentView: View {
                             guard let id = vm.messages.last?.id else { return }
                             Task { @MainActor in
                                 await Task.yield()
-                                withAnimation(.smooth) {
+                                withAnimation(.easeOut) {
                                     proxy.scrollTo(id, anchor: .bottom)
                                 }
+                            }
+                        }
+                        .onChange(of: vm.editingMessageID) { _, id in
+                            guard let id else { return }
+                            Task { @MainActor in
+                                await Task.yield()
+                                proxy.scrollTo(id, anchor: .center)
                             }
                         }
                         
@@ -124,6 +131,10 @@ struct ContentView: View {
                 //.ignoresSafeArea()
             }
             .sensoryFeedback(.impact(weight: .light), trigger: fvm.isFolderOpen)
+            .sensoryFeedback(trigger: vm.isResponding) { _, responding in
+                responding ? .impact(weight: .light) : .success
+            }
+            
             .simultaneousGesture(fvm.FolderGesture(drawerWidth: drawerWidth))
             .onGeometryChange(for: CGFloat.self) { proxy in
                 proxy.size.width + proxy.safeAreaInsets.leading + proxy.safeAreaInsets.trailing
