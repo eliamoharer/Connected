@@ -1,4 +1,5 @@
 # Connected
+[![Download on the App Store](https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg)](https://apps.apple.com/us/app/connected-ai/id6780355192)
 
 ![Platform](https://img.shields.io/badge/Platform-iOS%2026%2B%20%7C%20iPadOS%2026%2B-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
