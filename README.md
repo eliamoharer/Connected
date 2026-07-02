@@ -2,6 +2,7 @@
 
 ![Platform](https://img.shields.io/badge/Platform-iOS%2026%2B%20%7C%20iPadOS%2026%2B-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
+<img width="4000" height="4000" alt="image" src="https://github.com/user-attachments/assets/45562366-519b-4905-a68a-fdf74ab783d3" />
 
 An iOS application that lets you easily access and chat with locally hosted models over an internet connection.
 
